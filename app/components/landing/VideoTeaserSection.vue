@@ -5,8 +5,8 @@ const videoUrl = 'https://mbico.ir/wp-content/uploads/2024/10/Tizer.mp4'
 
 <template>
   <section class="py-10">
-    <div class="mx-auto max-w-6xl px-4">
-      <div class="relative overflow-hidden rounded-3xl shadow-sm ring-1 ring-black/5">
+    <div class="w-full">
+      <div class="relative overflow-hidden shadow-sm ring-1 ring-black/5">
         <NuxtImg
           src="https://mbico.ir/wp-content/uploads/2024/10/Mbico-Tizer.webp"
           alt="تیزر معرفی صنایع پخت مشهد"
@@ -39,7 +39,7 @@ const videoUrl = 'https://mbico.ir/wp-content/uploads/2024/10/Tizer.mp4'
         <div v-if="isOpen" class="fixed inset-0 z-[60]">
           <button class="absolute inset-0 bg-black/70" aria-label="بستن" @click="isOpen = false" />
           <div class="absolute inset-0 flex items-center justify-center p-4">
-            <div class="w-full max-w-3xl overflow-hidden rounded-2xl bg-black shadow-2xl ring-1 ring-white/10">
+            <div class="w-full max-w-6xl overflow-hidden rounded-2xl bg-black shadow-2xl ring-1 ring-white/10">
               <div class="flex items-center justify-between px-4 py-3 text-white/90">
                 <span class="text-sm">پخش ویدئو</span>
                 <button class="h-9 w-9 rounded-xl bg-white/10 hover:bg-white/15" aria-label="بستن" @click="isOpen = false">
@@ -54,4 +54,3 @@ const videoUrl = 'https://mbico.ir/wp-content/uploads/2024/10/Tizer.mp4'
     </div>
   </section>
 </template>
-
