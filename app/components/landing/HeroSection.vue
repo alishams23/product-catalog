@@ -1,11 +1,12 @@
 <template>
   <section class="relative overflow-hidden">
-    <NuxtImg
-      src="https://mbico.ir/wp-content/uploads/2025/12/Mbico-Hompageww.webp"
+    <img
+      src="/images/Mbico-Hompageww.webp"
       alt="شرکت بین المللی صنایع پخت مشهد"
       class="h-[420px] w-full object-cover sm:h-[520px] lg:h-[560px]"
-      sizes="100vw"
-    />
+      loading="eager"
+      decoding="async"
+    >
     <div class="absolute inset-0 bg-black/10" />
 
     <div class="absolute inset-0">
@@ -34,4 +35,3 @@
     </div>
   </section>
 </template>
-
