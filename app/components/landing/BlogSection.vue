@@ -28,59 +28,46 @@ const posts = [
 <template>
   <section class="py-10">
     <div class="mx-auto max-w-6xl px-4">
-      <div class="grid gap-6 lg:grid-cols-12">
-        <div class="lg:col-span-4">
-          <div class="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm">
-            <h2 class="text-[1rem] font-semibold text-zinc-900">
-              {{ intro.title }}
-            </h2>
-            <div class="mt-3 h-px w-full bg-zinc-200" />
-            <p class="mt-4 text-sm leading-8 text-zinc-600">
-              {{ intro.text }}
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <UiSectionHeading :title="intro.title" :subtitle="intro.text" align="right" />
+        <a
+          class="inline-flex h-11 items-center justify-center rounded-lg bg-amber-500 px-6 text-sm font-semibold text-white shadow hover:bg-amber-600"
+          :href="intro.href"
+          target="_blank"
+          rel="noopener"
+        >
+          وبلاگ ما
+        </a>
+      </div>
+
+      <div class="mt-6 grid gap-5 md:grid-cols-2">
+        <a
+          v-for="p in posts"
+          :key="p.href"
+          class="group flex flex-col overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-sm transition hover:shadow-md sm:flex-row"
+          :href="p.href"
+          target="_blank"
+          rel="noopener"
+        >
+          <div class="relative sm:w-[52%]">
+            <NuxtImg :src="p.image" :alt="p.title" class="h-48 w-full object-cover sm:h-full" />
+            <div class="absolute top-3 right-3 rounded-xl border border-zinc-200 bg-white/95 px-3 py-2 text-center">
+              <p class="text-sm font-bold text-zinc-900 leading-none">{{ p.day }}</p>
+              <p class="mt-1 text-[0.65rem] text-zinc-600">{{ p.month }}</p>
+            </div>
+          </div>
+
+          <div class="flex flex-1 flex-col justify-center p-5 text-right sm:w-[48%] sm:border-s sm:border-zinc-200 sm:p-6">
+            <h3 class="text-sm font-semibold leading-7 text-zinc-900 group-hover:text-amber-700">
+              {{ p.title }}
+            </h3>
+            <div class="mt-3 h-px w-16 bg-zinc-200" />
+            <p class="mt-3 text-sm leading-7 text-zinc-600">
+              {{ p.excerpt }}
             </p>
-            <a
-              class="mt-5 inline-flex rounded-lg bg-amber-500 px-5 py-2.5 text-sm font-semibold text-white shadow hover:bg-amber-600"
-              :href="intro.href"
-              target="_blank"
-              rel="noopener"
-            >
-              وبلاگ ما
-            </a>
           </div>
-        </div>
-
-        <div class="lg:col-span-8">
-          <div class="grid gap-5 sm:grid-cols-2">
-            <a
-              v-for="p in posts"
-              :key="p.href"
-              class="group relative overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-sm hover:shadow-md transition"
-              :href="p.href"
-              target="_blank"
-              rel="noopener"
-            >
-              <div class="relative">
-                <NuxtImg :src="p.image" :alt="p.title" class="h-44 w-full object-cover" />
-                <div class="absolute top-3 right-3 rounded-xl border border-zinc-200 bg-white/95 px-3 py-2 text-center">
-                  <p class="text-sm font-bold text-zinc-900 leading-none">{{ p.day }}</p>
-                  <p class="mt-1 text-[0.65rem] text-zinc-600">{{ p.month }}</p>
-                </div>
-              </div>
-
-              <div class="p-5 text-right">
-                <h3 class="text-sm font-semibold leading-7 text-zinc-900 group-hover:text-amber-700">
-                  {{ p.title }}
-                </h3>
-                <div class="mt-3 h-px w-16 bg-zinc-200" />
-                <p class="mt-3 text-sm leading-7 text-zinc-600">
-                  {{ p.excerpt }}
-                </p>
-              </div>
-            </a>
-          </div>
-        </div>
+        </a>
       </div>
     </div>
   </section>
 </template>
-
