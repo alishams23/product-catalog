@@ -33,7 +33,7 @@ const products = [
           <a
             v-for="p in products"
             :key="p.href"
-            class="min-w-[220px] max-w-[220px] overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-black/5 hover:shadow-md transition"
+            class="min-w-55 max-w-55 overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-black/5 hover:shadow-md transition"
             :href="p.href"
             target="_blank"
             rel="noopener"

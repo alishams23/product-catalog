@@ -17,9 +17,8 @@ withDefaults(defineProps<{
       {{ subtitle }}
     </p>
     <div
-      class="mt-3 h-[2px] w-16 bg-zinc-300"
+      class="mt-3 h-0.5 w-16 bg-zinc-300"
       :class="align === 'center' ? 'mx-auto' : 'mr-0'"
     />
   </header>
 </template>
-
