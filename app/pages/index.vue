@@ -1,5 +1,12 @@
 <template>
-  <div class="text-black hover:text-2xl">
-   hello
+  <div>
+    <LandingHeroSection />
+    <LandingProductCategoriesSection />
+    <LandingOvenCategoriesSection />
+    <LandingServicesSection />
+    <LandingFeaturedProductsSection />
+    <LandingCertificatesSection />
+    <LandingVideoTeaserSection />
+    <LandingBlogSection />
   </div>
 </template>

@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 useHead({
   meta: [
     { name: 'viewport', content: 'width=device-width, initial-scale=1' }
@@ -7,72 +7,31 @@ useHead({
     { rel: 'icon', href: '/favicon.ico' }
   ],
   htmlAttrs: {
-    lang: 'en'
+    lang: 'fa',
+    dir: 'rtl'
   }
 })
 
-const title = 'Nuxt Starter Template'
-const description = 'A production-ready starter template powered by Nuxt UI. Build beautiful, accessible, and performant applications in minutes, not hours.'
+const title = 'صنایع پخت مشهد | MBICO'
+const description = 'بزرگترین سازنده دستگاه‌های نانوایی، قنادی و ماشین‌آلات پخت'
 
 useSeoMeta({
   title,
   description,
   ogTitle: title,
   ogDescription: description,
-  ogImage: 'https://ui.nuxt.com/assets/templates/nuxt/starter-light.png',
-  twitterImage: 'https://ui.nuxt.com/assets/templates/nuxt/starter-light.png',
+  ogImage: 'https://mbico.ir/wp-content/uploads/2024/10/MBI-Short-Tizer296.png',
+  twitterImage: 'https://mbico.ir/wp-content/uploads/2024/10/MBI-Short-Tizer296.png',
   twitterCard: 'summary_large_image'
 })
 </script>
 
 <template>
-  <UApp>
-    <UHeader>
-      <template #left>
-        <NuxtLink to="/">
-          <AppLogo class="w-auto h-6 shrink-0" />
-        </NuxtLink>
-
-        <TemplateMenu />
-      </template>
-
-      <template #right>
-        <UColorModeButton />
-
-        <UButton
-          to="https://github.com/nuxt-ui-templates/starter"
-          target="_blank"
-          icon="i-simple-icons-github"
-          aria-label="GitHub"
-          color="neutral"
-          variant="ghost"
-        />
-      </template>
-    </UHeader>
-
-    <UMain>
+  <div class="min-h-dvh bg-white text-zinc-900">
+    <SiteHeader />
+    <main>
       <NuxtPage />
-    </UMain>
-
-    <USeparator icon="i-simple-icons-nuxtdotjs" />
-
-    <UFooter>
-      <template #left>
-        <p class="text-sm text-muted">
-          Built with Nuxt UI • © {{ new Date().getFullYear() }}
-        </p>
-      </template>
-
-      <template #right>
-        <UButton
-          to="https://github.com/nuxt-ui-templates/starter"
-          target="_blank"
-          icon="i-simple-icons-github"
-          aria-label="GitHub"
-          color="neutral"
-          variant="ghost"
-        />
-      </template>
-    </UFooter>
-  </UApp>
+    </main>
+    <SiteFooter />
+  </div>
 </template>

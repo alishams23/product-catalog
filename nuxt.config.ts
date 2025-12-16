@@ -8,8 +8,8 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
-  routeRules: {
-    '/': { prerender: true }
+  image: {
+    domains: ['mbico.ir']
   },
 
   compatibilityDate: '2025-01-15',
