@@ -3,7 +3,7 @@
     <img
       src="/images/Mbico-Hompageww.webp"
       alt="شرکت بین المللی صنایع پخت مشهد"
-      class="h-[420px] w-full object-cover sm:h-[520px] lg:h-[560px]"
+      class="h-[520px] w-full object-cover sm:h-[640px] lg:h-[720px]"
       loading="eager"
       decoding="async"
     >

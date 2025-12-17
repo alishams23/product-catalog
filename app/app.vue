@@ -24,12 +24,15 @@ useSeoMeta({
   twitterImage: 'https://mbico.ir/wp-content/uploads/2024/10/MBI-Short-Tizer296.png',
   twitterCard: 'summary_large_image'
 })
+
+const route = useRoute()
+const mainOffsetClass = computed(() => (route.path === '/' ? '' : 'pt-16'))
 </script>
 
 <template>
   <div class="min-h-dvh bg-white text-zinc-900">
     <SiteHeader />
-    <main>
+    <main :class="mainOffsetClass">
       <NuxtPage />
     </main>
     <SiteFooter />

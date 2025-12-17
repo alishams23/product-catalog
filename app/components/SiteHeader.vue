@@ -5,6 +5,8 @@ type MegaTab = { key: string, label: string, href: string, items: NavLink[] }
 const isMobileOpen = ref(false)
 const isProductsOpen = ref(false)
 const activeProductsTab = ref<'ovens' | 'equipment' | 'mobile'>('ovens')
+const isAtTop = ref(true)
+const scrollThresholdPx = 8
 
 const topLinks: NavLink[] = [
   { label: 'درباره ما', href: 'https://mbico.ir/%d8%af%d8%b1%d8%a8%d8%a7%d8%b1%d9%87-%d8%b5%d9%86%d8%a7%db%8c%d8%b9-%d9%be%d8%ae%d8%aa-%d9%85%d8%b4%d9%87%d8%af/' },
@@ -60,11 +62,55 @@ function closeAll() {
 }
 
 const route = useRoute()
-watch(() => route.fullPath, () => closeAll())
+const showMenu = computed(() => route.path !== '/' || !isAtTop.value)
+
+function readScrollY() {
+  return window.scrollY || window.pageYOffset || 0
+}
+
+let rafId: number | null = null
+function onScroll() {
+  if (rafId != null) return
+  rafId = window.requestAnimationFrame(() => {
+    rafId = null
+    isAtTop.value = readScrollY() <= scrollThresholdPx
+    if (!showMenu.value) closeAll()
+  })
+}
+
+onMounted(() => {
+  isAtTop.value = readScrollY() <= scrollThresholdPx
+  window.requestAnimationFrame(() => {
+    isAtTop.value = readScrollY() <= scrollThresholdPx
+  })
+  window.addEventListener('scroll', onScroll, { passive: true })
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', onScroll)
+  if (rafId != null) window.cancelAnimationFrame(rafId)
+})
+
+watch(() => route.fullPath, async () => {
+  closeAll()
+  await nextTick()
+  isAtTop.value = readScrollY() <= scrollThresholdPx
+})
 </script>
 
 <template>
-  <header class="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-zinc-200 shadow-sm">
+  <Transition
+    enter-active-class="transition duration-250 ease-out"
+    enter-from-class="-translate-y-3 opacity-0"
+    enter-to-class="translate-y-0 opacity-100"
+    leave-active-class="transition duration-200 ease-in"
+    leave-from-class="translate-y-0 opacity-100"
+    leave-to-class="-translate-y-3 opacity-0"
+  >
+    <header
+      v-show="showMenu"
+      class="fixed inset-x-0 top-0 z-50 border-b border-zinc-200 bg-white/95 shadow-sm backdrop-blur"
+    >
     <div class="mx-auto max-w-6xl px-4">
       <div class="flex items-center gap-3 py-3">
         <a href="https://mbico.ir/" class="flex items-center gap-3">
@@ -212,6 +258,6 @@ watch(() => route.fullPath, () => closeAll())
         </div>
       </aside>
     </div>
-  </header>
+    </header>
+  </Transition>
 </template>
-
