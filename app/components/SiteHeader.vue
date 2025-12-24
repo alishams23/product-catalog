@@ -212,7 +212,7 @@ watch(() => route.fullPath, async () => {
             class="hidden sm:inline-flex items-center rounded-full bg-amber-500 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-amber-600"
             href="tel:+985132464090"
           >
-            تماس: ۰۵۱-۳۲۴۶۴۰۹۰
+            تماس: ۰۵۱-۳۲۴۶۴۰۸۰
           </a>
 
           <button
