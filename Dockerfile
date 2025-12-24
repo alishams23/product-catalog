@@ -4,8 +4,12 @@ FROM docker.arvancloud.ir/node:${NODE_VERSION} AS build
 WORKDIR /app
 
 # Keep memory usage predictable on small machines; override via build args if needed.
-ARG NODE_OPTIONS=--max-old-space-size=512
+ARG NODE_OPTIONS=--max-old-space-size=1024
 ENV NODE_OPTIONS=${NODE_OPTIONS}
+
+# Avoid downloading fonts during build; set to 1 to re-enable.
+ARG NUXT_FONTS_DOWNLOAD=0
+ENV NUXT_FONTS_DOWNLOAD=${NUXT_FONTS_DOWNLOAD}
 
 COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
