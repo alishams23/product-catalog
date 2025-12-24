@@ -7,13 +7,11 @@ WORKDIR /app
 ARG NODE_OPTIONS=--max-old-space-size=512
 ENV NODE_OPTIONS=${NODE_OPTIONS}
 
-RUN corepack enable
-
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-RUN pnpm install --frozen-lockfile
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
 
 COPY . .
-RUN pnpm build
+RUN npm run build
 
 FROM docker.arvancloud.ir/node:${NODE_VERSION} AS runtime
 WORKDIR /app
