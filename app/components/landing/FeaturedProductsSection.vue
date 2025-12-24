@@ -58,6 +58,20 @@ function setSlideRef(el: Element | ComponentPublicInstance | null) {
   if (el instanceof HTMLElement) slideRefs.value.push(el)
 }
 
+function toProductRoute(href: string): string {
+  const slugEncoded = /https:\/\/mbico\.ir\/products\/([^/?#]+)(?:\/|$)/.exec(href)?.[1]
+  if (!slugEncoded) return href
+
+  let slug = slugEncoded
+  try {
+    slug = decodeURIComponent(slugEncoded)
+  } catch {
+    slug = slugEncoded
+  }
+
+  return `/products/${encodeURIComponent(slug)}`
+}
+
 function scrollToIndex(index: number, behavior: ScrollBehavior = 'smooth') {
   const container = scroller.value
   const el = slideRefs.value[index]
@@ -177,15 +191,14 @@ onBeforeUnmount(() => {
           @scroll.passive="onScroll"
           @wheel="onWheel"
         >
-          <a
+          <component
             v-for="(p, i) in items"
             :key="`${p.href}-${i}`"
             :ref="setSlideRef"
             class="group relative flex w-[210px] shrink-0 snap-center flex-col overflow-hidden rounded-[30px] bg-zinc-50 ring-1 ring-black/5 transition duration-300 hover:shadow-md sm:w-[230px]"
             :class="i === activeIndex ? 'z-10 scale-[1.04] shadow-md' : 'scale-[0.97] opacity-90'"
-            :href="p.href"
-            target="_blank"
-            rel="noopener"
+            :is="toProductRoute(p.href).startsWith('/products/') ? 'NuxtLink' : 'a'"
+            v-bind="toProductRoute(p.href).startsWith('/products/') ? { to: toProductRoute(p.href) } : { href: p.href, target: '_blank', rel: 'noopener' }"
           >
             <div class="p-4">
               <div class="overflow-hidden rounded-[20%] bg-white">
@@ -208,7 +221,7 @@ onBeforeUnmount(() => {
                 </span>
               </div>
             </div>
-          </a>
+          </component>
         </div>
       </div>
     </div>

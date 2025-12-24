@@ -9,12 +9,12 @@ const isAtTop = ref(true)
 const scrollThresholdPx = 8
 
 const topLinks: NavLink[] = [
-  { label: 'درباره ما', href: 'https://mbico.ir/%d8%af%d8%b1%d8%a8%d8%a7%d8%b1%d9%87-%d8%b5%d9%86%d8%a7%db%8c%d8%b9-%d9%be%d8%ae%d8%aa-%d9%85%d8%b4%d9%87%d8%af/' },
-  { label: 'تماس با ما', href: 'https://mbico.ir/%d8%aa%d9%85%d8%a7%d8%b3-%d8%a8%d8%a7-%d8%b5%d9%86%d8%a7%db%8c%d8%b9-%d9%be%d8%ae%d8%aa-%d9%85%d8%b4%d9%87%d8%af/' },
-  { label: 'اخبار', href: 'https://mbico.ir/news/' },
-  { label: 'خدمات پس از فروش', href: 'https://mbico.ir/%d8%ae%d8%af%d9%85%d8%a7%d8%aa-%d9%be%d8%b3-%d8%a7%d8%b2-%d9%81%d8%b1%d9%88%d8%b4/' },
-  { label: 'وبلاگ', href: 'https://mbico.ir/blog/' },
-  { label: 'آکادمی پخت', href: 'https://mbico.ir/academi/' },
+  { label: 'درباره ما', href: '/about' },
+  { label: 'تماس با ما', href: '/contact' },
+  { label: 'اخبار', href: '/news' },
+  { label: 'خدمات پس از فروش', href: '/after-sales' },
+  { label: 'وبلاگ', href: '/blog' },
+  { label: 'آکادمی پخت', href: '/academy' },
   { label: 'English', href: 'https://mbico.com' }
 ]
 
@@ -22,43 +22,69 @@ const productsTabs: MegaTab[] = [
   {
     key: 'ovens',
     label: 'فرهای پخت',
-    href: 'https://mbico.ir/%d9%81%d8%b1%d9%87%d8%a7%db%8c-%d9%be%d8%ae%d8%aa/',
+    href: '/products',
     items: [
-      { label: 'دستگاه‌های نانوایی', href: 'https://mbico.ir/%d8%af%d8%b3%d8%aa%da%af%d8%a7%d9%87-%d9%87%d8%a7%db%8c-%d9%86%d8%a7%d9%86%d9%88%d8%a7%db%8c%db%8c/' },
-      { label: 'فرهای پخت نان حجیم و نیمه‌حجیم', href: 'https://mbico.ir/%d9%81%d8%b1%d9%87%d8%a7%db%8c-%d9%be%d8%ae%d8%aa-%d9%86%d8%a7%d9%86-%d8%ad%d8%ac%db%8c%d9%85/' },
-      { label: 'فرهای پخت پیتزا و غذا', href: 'https://mbico.ir/%d9%81%d8%b1%d9%87%d8%a7%db%8c-%d9%be%d8%ae%d8%aa-%d9%be%db%8c%d8%aa%d8%b2%d8%a7-%d8%ba%d8%b0%d8%a7/' },
-      { label: 'دستگاه لواش', href: 'https://mbico.ir/%d8%af%d8%b3%d8%aa%da%af%d8%a7%d9%87-%d9%84%d9%88%d8%a7%d8%b4/' },
-      { label: 'دستگاه بربری', href: 'https://mbico.ir/%d8%af%d8%b3%d8%aa%da%af%d8%a7%d9%87-%d8%a8%d8%b1%d8%a8%d8%b1%db%8c/' },
-      { label: 'دستگاه سنگک', href: 'https://mbico.ir/%d8%af%d8%b3%d8%aa%da%af%d8%a7%d9%87-%d8%b3%d9%86%da%af%da%a9/' },
-      { label: 'دستگاه تافتون', href: 'https://mbico.ir/%d8%af%d8%b3%d8%aa%da%af%d8%a7%d9%87-%d8%aa%d8%a7%d9%81%d8%aa%d9%88%d9%86/' }
+      { label: 'دستگاه‌های نانوایی', href: '/products' },
+      { label: 'فرهای پخت نان حجیم و نیمه‌حجیم', href: '/products' },
+      { label: 'فرهای پخت پیتزا و غذا', href: '/products' },
+      { label: 'دستگاه لواش', href: '/products' },
+      { label: 'دستگاه بربری', href: '/products' },
+      { label: 'دستگاه سنگک', href: '/products' },
+      { label: 'دستگاه تافتون', href: '/products' }
     ]
   },
   {
     key: 'equipment',
     label: 'تجهیزات پخت',
-    href: 'https://mbico.ir/%d8%aa%d8%ac%d9%87%db%8c%d8%b2%d8%a7%d8%aa-%d9%be%d8%ae%d8%aa/',
+    href: '/products',
     items: [
-      { label: 'مشاهده همه تجهیزات پخت', href: 'https://mbico.ir/%d8%aa%d8%ac%d9%87%db%8c%d8%b2%d8%a7%d8%aa-%d9%be%d8%ae%d8%aa/' },
-      { label: 'محصولات', href: 'https://mbico.ir/products/' },
-      { label: 'خدمات پس از فروش', href: 'https://mbico.ir/%d8%ae%d8%af%d9%85%d8%a7%d8%aa-%d9%be%d8%b3-%d8%a7%d8%b2-%d9%81%d8%b1%d9%88%d8%b4/' }
+      { label: 'مشاهده همه تجهیزات پخت', href: '/products' },
+      { label: 'محصولات', href: '/products' },
+      { label: 'خدمات پس از فروش', href: '/after-sales' }
     ]
   },
   {
     key: 'mobile',
     label: 'ماشین‌آلات پخت سیار',
-    href: 'https://mbico.ir/%d9%85%d8%a7%d8%b4%db%8c%d9%86-%d8%a2%d9%84%d8%a7%d8%aa-%d9%be%d8%ae%d8%aa-%d8%b3%db%8c%d8%a7%d8%b1/',
+    href: '/products',
     items: [
-      { label: 'مشاهده همه ماشین‌آلات پخت سیار', href: 'https://mbico.ir/%d9%85%d8%a7%d8%b4%db%8c%d9%86-%d8%a2%d9%84%d8%a7%d8%aa-%d9%be%d8%ae%d8%aa-%d8%b3%db%8c%d8%a7%d8%b1/' },
-      { label: 'محصولات', href: 'https://mbico.ir/products/' }
+      { label: 'مشاهده همه ماشین‌آلات پخت سیار', href: '/products' },
+      { label: 'محصولات', href: '/products' }
     ]
   }
 ]
 
 const activeTab = computed(() => productsTabs.find(t => t.key === activeProductsTab.value) ?? productsTabs[0]!)
+const isInternalLink = (href: string) => href.startsWith('/')
+
+let productsCloseTimer: ReturnType<typeof setTimeout> | null = null
+function openProductsMenu() {
+  if (productsCloseTimer) {
+    clearTimeout(productsCloseTimer)
+    productsCloseTimer = null
+  }
+  isProductsOpen.value = true
+}
+
+function closeProductsMenu() {
+  if (productsCloseTimer) {
+    clearTimeout(productsCloseTimer)
+    productsCloseTimer = null
+  }
+  isProductsOpen.value = false
+}
+
+function scheduleCloseProductsMenu() {
+  if (productsCloseTimer) clearTimeout(productsCloseTimer)
+  productsCloseTimer = setTimeout(() => {
+    isProductsOpen.value = false
+    productsCloseTimer = null
+  }, 120)
+}
 
 function closeAll() {
   isMobileOpen.value = false
-  isProductsOpen.value = false
+  closeProductsMenu()
 }
 
 const route = useRoute()
@@ -89,6 +115,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener('scroll', onScroll)
   if (rafId != null) window.cancelAnimationFrame(rafId)
+  if (productsCloseTimer) clearTimeout(productsCloseTimer)
 })
 
 watch(() => route.fullPath, async () => {
@@ -113,54 +140,59 @@ watch(() => route.fullPath, async () => {
     >
     <div class="mx-auto max-w-6xl px-4">
       <div class="flex items-center gap-3 py-3">
-        <a href="https://mbico.ir/" class="flex items-center gap-3">
+        <NuxtLink to="/" class="flex items-center gap-3">
           <MbicoLogo class="h-9 w-auto" />
-        </a>
+        </NuxtLink>
 
         <nav class="hidden lg:flex items-center gap-6 text-sm font-medium text-zinc-800">
           <div
             class="relative"
-            @mouseenter="isProductsOpen = true"
-            @mouseleave="isProductsOpen = false"
+            @mouseenter="openProductsMenu"
+            @mouseleave="scheduleCloseProductsMenu"
           >
             <button
               type="button"
               class="inline-flex items-center gap-1 hover:text-amber-600"
               :aria-expanded="isProductsOpen ? 'true' : 'false'"
               aria-haspopup="menu"
-              @click="isProductsOpen = !isProductsOpen"
+              @click="isProductsOpen ? closeProductsMenu() : openProductsMenu()"
             >
               محصولات
               <span class="text-zinc-500">▾</span>
             </button>
 
-            <div
-              v-if="isProductsOpen"
-              class="absolute right-0 top-full mt-3 w-[720px] rounded-2xl border border-zinc-200 bg-white shadow-xl"
-              role="menu"
-            >
-              <div class="grid grid-cols-12 gap-0 overflow-hidden rounded-2xl">
-                <div class="col-span-4 border-l border-zinc-200 bg-zinc-50 p-4">
-                  <p class="mb-2 text-xs font-semibold text-zinc-500">
-                    دسته‌بندی‌ها
-                  </p>
-                  <div class="flex flex-col gap-1">
-                    <button
-                      v-for="tab in productsTabs"
-                      :key="tab.key"
-                      type="button"
-                      class="rounded-xl px-3 py-2 text-right text-sm transition"
-                      :class="tab.key === activeProductsTab ? 'bg-amber-100 text-zinc-900' : 'hover:bg-zinc-100 text-zinc-700'"
-                      @click="activeProductsTab = tab.key as any"
-                    >
-                      {{ tab.label }}
-                    </button>
+            <div v-if="isProductsOpen" class="absolute right-0 top-full pt-3" role="menu" @mouseenter="openProductsMenu" @mouseleave="scheduleCloseProductsMenu">
+              <div class="w-[720px] rounded-2xl border border-zinc-200 bg-white shadow-xl">
+                <div class="grid grid-cols-12 gap-0 overflow-hidden rounded-2xl">
+                  <div class="col-span-4 border-l border-zinc-200 bg-zinc-50 p-4">
+                    <p class="mb-2 text-xs font-semibold text-zinc-500">
+                      دسته‌بندی‌ها
+                    </p>
+                    <div class="flex flex-col gap-1">
+                      <button
+                        v-for="tab in productsTabs"
+                        :key="tab.key"
+                        type="button"
+                        class="rounded-xl px-3 py-2 text-right text-sm transition"
+                        :class="tab.key === activeProductsTab ? 'bg-amber-100 text-zinc-900' : 'hover:bg-zinc-100 text-zinc-700'"
+                        @click="activeProductsTab = tab.key as any"
+                      >
+                        {{ tab.label }}
+                      </button>
+                    </div>
                   </div>
-                </div>
 
-                <div class="col-span-8 p-5">
-                  <div class="flex items-center justify-between gap-3">
+                  <div class="col-span-8 p-5">
+                    <div class="flex items-center justify-between gap-3">
+                    <NuxtLink
+                      v-if="isInternalLink(activeTab.href)"
+                      class="text-sm font-semibold text-zinc-900 hover:text-amber-600"
+                      :to="activeTab.href"
+                    >
+                      {{ activeTab.label }}
+                    </NuxtLink>
                     <a
+                      v-else
                       class="text-sm font-semibold text-zinc-900 hover:text-amber-600"
                       :href="activeTab.href"
                       target="_blank"
@@ -168,7 +200,16 @@ watch(() => route.fullPath, async () => {
                     >
                       {{ activeTab.label }}
                     </a>
+
+                    <NuxtLink
+                      v-if="isInternalLink(activeTab.href)"
+                      class="text-xs text-amber-700 hover:text-amber-800"
+                      :to="activeTab.href"
+                    >
+                      مشاهده همه
+                    </NuxtLink>
                     <a
+                      v-else
                       class="text-xs text-amber-700 hover:text-amber-800"
                       :href="activeTab.href"
                       target="_blank"
@@ -178,33 +219,46 @@ watch(() => route.fullPath, async () => {
                     </a>
                   </div>
 
-                  <div class="mt-4 grid grid-cols-2 gap-x-6 gap-y-2">
-                    <a
-                      v-for="item in activeTab.items"
-                      :key="item.href"
-                      class="rounded-lg px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900"
-                      :href="item.href"
-                      target="_blank"
-                      rel="noopener"
-                    >
-                      {{ item.label }}
-                    </a>
+                    <div class="mt-4 grid grid-cols-2 gap-x-6 gap-y-2">
+                      <template v-for="item in activeTab.items" :key="item.href">
+                        <NuxtLink
+                          v-if="isInternalLink(item.href)"
+                          class="rounded-lg px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900"
+                          :to="item.href"
+                        >
+                          {{ item.label }}
+                        </NuxtLink>
+                        <a
+                          v-else
+                          class="rounded-lg px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900"
+                          :href="item.href"
+                          target="_blank"
+                          rel="noopener"
+                        >
+                          {{ item.label }}
+                        </a>
+                      </template>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <a
-            v-for="l in topLinks"
-            :key="l.href"
-            class="hover:text-amber-600"
-            :href="l.href"
-            target="_blank"
-            rel="noopener"
-          >
-            {{ l.label }}
-          </a>
+          <template v-for="l in topLinks" :key="l.href">
+            <NuxtLink v-if="isInternalLink(l.href)" class="hover:text-amber-600" :to="l.href">
+              {{ l.label }}
+            </NuxtLink>
+            <a
+              v-else
+              class="hover:text-amber-600"
+              :href="l.href"
+              target="_blank"
+              rel="noopener"
+            >
+              {{ l.label }}
+            </a>
+          </template>
         </nav>
 
         <div class="mr-auto flex items-center gap-2">
@@ -239,21 +293,29 @@ watch(() => route.fullPath, async () => {
         </div>
 
         <div class="p-4">
-          <a class="block rounded-xl bg-amber-500 px-4 py-3 text-center text-sm font-semibold text-white" href="https://mbico.ir/products/" target="_blank" rel="noopener">
+          <NuxtLink class="block rounded-xl bg-amber-500 px-4 py-3 text-center text-sm font-semibold text-white" to="/products">
             مشاهده محصولات
-          </a>
+          </NuxtLink>
 
           <div class="mt-4 space-y-1">
-            <a
-              v-for="l in topLinks"
-              :key="l.href"
-              class="block rounded-xl px-3 py-3 text-sm text-zinc-800 hover:bg-zinc-50"
-              :href="l.href"
-              target="_blank"
-              rel="noopener"
-            >
-              {{ l.label }}
-            </a>
+            <template v-for="l in topLinks" :key="l.href">
+              <NuxtLink
+                v-if="isInternalLink(l.href)"
+                class="block rounded-xl px-3 py-3 text-sm text-zinc-800 hover:bg-zinc-50"
+                :to="l.href"
+              >
+                {{ l.label }}
+              </NuxtLink>
+              <a
+                v-else
+                class="block rounded-xl px-3 py-3 text-sm text-zinc-800 hover:bg-zinc-50"
+                :href="l.href"
+                target="_blank"
+                rel="noopener"
+              >
+                {{ l.label }}
+              </a>
+            </template>
           </div>
         </div>
       </aside>

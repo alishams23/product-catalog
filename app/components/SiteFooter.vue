@@ -1,5 +1,7 @@
 <script setup lang="ts">
 const year = new Date().getFullYear()
+const siteOrigin = useRequestURL().origin
+const siteOriginLabel = siteOrigin.replace('https://', '').replace('http://', '')
 
 const socials = [
   { label: 'Instagram', href: 'https://www.instagram.com/modern_bakery_mbico', icon: 'https://mbico.ir/wp-content/uploads/2024/07/instagram-ico-280x280.png' },
@@ -65,11 +67,11 @@ const socials = [
             <h3 class="text-sm font-semibold text-white">دسترسی سریع</h3>
             <div class="mt-3 h-px w-16 bg-amber-500" />
             <div class="mt-4 grid gap-2 text-sm">
-              <a class="hover:text-amber-400" href="https://mbico.ir/products/" target="_blank" rel="noopener">محصولات</a>
-              <a class="hover:text-amber-400" href="https://mbico.ir/blog/" target="_blank" rel="noopener">وبلاگ</a>
-              <a class="hover:text-amber-400" href="https://mbico.ir/news/" target="_blank" rel="noopener">اخبار</a>
-              <a class="hover:text-amber-400" href="https://mbico.ir/%d8%ae%d8%af%d9%85%d8%a7%d8%aa-%d9%be%d8%b3-%d8%a7%d8%b2-%d9%81%d8%b1%d9%88%d8%b4/" target="_blank" rel="noopener">خدمات پس از فروش</a>
-              <a class="hover:text-amber-400" href="https://mbico.ir/%d8%aa%d9%85%d8%a7%d8%b3-%d8%a8%d8%a7-%d8%b5%d9%86%d8%a7%db%8c%d8%b9-%d9%be%d8%ae%d8%aa-%d9%85%d8%b4%d9%87%d8%af/" target="_blank" rel="noopener">تماس با ما</a>
+              <NuxtLink class="hover:text-amber-400" to="/products">محصولات</NuxtLink>
+              <NuxtLink class="hover:text-amber-400" to="/blog">وبلاگ</NuxtLink>
+              <NuxtLink class="hover:text-amber-400" to="/news">اخبار</NuxtLink>
+              <NuxtLink class="hover:text-amber-400" to="/after-sales">خدمات پس از فروش</NuxtLink>
+              <NuxtLink class="hover:text-amber-400" to="/contact">تماس با ما</NuxtLink>
             </div>
           </div>
 
@@ -78,7 +80,7 @@ const socials = [
             <div class="mt-3 h-px w-16 bg-amber-500" />
             <div class="mt-4 space-y-3 text-sm text-zinc-300">
               <p>تلفن: <a class="hover:text-amber-400" href="tel:+985132464090">۰۵۱-۳۲۴۶۴۰۹۰</a></p>
-              <p>وب‌سایت: <a class="hover:text-amber-400" href="https://mbico.ir/" target="_blank" rel="noopener">mbico.ir</a></p>
+              <p>وب‌سایت: <NuxtLink class="hover:text-amber-400" to="/">{{ siteOriginLabel }}</NuxtLink></p>
               <p>ایمیل: <a class="hover:text-amber-400" href="mailto:info@mbico.ir">info@mbico.ir</a></p>
             </div>
           </div>

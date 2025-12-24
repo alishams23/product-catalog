@@ -14,14 +14,17 @@ useHead({
 
 const title = 'صنایع پخت مشهد | MBICO'
 const description = 'بزرگترین سازنده دستگاه‌های نانوایی، قنادی و ماشین‌آلات پخت'
+const siteUrl = useRequestURL().origin
+const defaultOgImage = `${siteUrl}/images/Mbico-Hompageww.webp`
 
 useSeoMeta({
   title,
   description,
   ogTitle: title,
   ogDescription: description,
-  ogImage: 'https://mbico.ir/wp-content/uploads/2024/10/MBI-Short-Tizer296.png',
-  twitterImage: 'https://mbico.ir/wp-content/uploads/2024/10/MBI-Short-Tizer296.png',
+  ogUrl: siteUrl,
+  ogImage: defaultOgImage,
+  twitterImage: defaultOgImage,
   twitterCard: 'summary_large_image'
 })
 

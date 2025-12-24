@@ -2,7 +2,7 @@
 const intro = {
   title: 'جدیدترین اخبار و مقالات',
   text: 'همواره در جریان آخرین اخبار و رویدادهای مهم ما باشید. با ما به‌روز بمانید!',
-  href: 'https://mbico.ir/blog/'
+  href: '/blog'
 }
 
 const posts = [
@@ -23,6 +23,20 @@ const posts = [
     excerpt: 'گزارشی از حضور و معرفی محصولات و ماشین‌آلات و تجهیزات وابسته در نمایشگاه ...'
   }
 ]
+
+function toBlogRoute(href: string): string {
+  const slugEncoded = /https:\/\/mbico\.ir\/blog\/([^/?#]+)(?:\/|$)/.exec(href)?.[1]
+  if (!slugEncoded) return '/blog'
+
+  let slug = slugEncoded
+  try {
+    slug = decodeURIComponent(slugEncoded)
+  } catch {
+    slug = slugEncoded
+  }
+
+  return `/blog/${encodeURIComponent(slug)}`
+}
 </script>
 
 <template>
@@ -30,24 +44,17 @@ const posts = [
     <div class="mx-auto max-w-6xl px-4">
       <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <UiSectionHeading :title="intro.title" :subtitle="intro.text" align="right" />
-        <a
-          class="inline-flex h-11 items-center justify-center rounded-lg bg-amber-500 px-6 text-sm font-semibold text-white shadow hover:bg-amber-600"
-          :href="intro.href"
-          target="_blank"
-          rel="noopener"
-        >
+        <NuxtLink class="inline-flex h-11 items-center justify-center rounded-lg bg-amber-500 px-6 text-sm font-semibold text-white shadow hover:bg-amber-600" :to="intro.href">
           وبلاگ ما
-        </a>
+        </NuxtLink>
       </div>
 
       <div class="mt-6 grid gap-5 md:grid-cols-2">
-        <a
+        <NuxtLink
           v-for="p in posts"
           :key="p.href"
           class="group flex flex-col overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-sm transition hover:shadow-md sm:flex-row"
-          :href="p.href"
-          target="_blank"
-          rel="noopener"
+          :to="toBlogRoute(p.href)"
         >
           <div class="relative sm:w-[52%]">
             <NuxtImg :src="p.image" :alt="p.title" class="h-48 w-full object-cover sm:h-full" />
@@ -66,7 +73,7 @@ const posts = [
               {{ p.excerpt }}
             </p>
           </div>
-        </a>
+        </NuxtLink>
       </div>
     </div>
   </section>

@@ -53,8 +53,8 @@ const items = [
                 class="select-none object-contain flex justify-center items-center"
                 :class="
                   item.variant === 'certificate'
-                    ? 'h-full w-auto  max-w-[240px] rounded-lg '
-                    : 'h-full w-32 max-w-[120px] opacity-80 grayscale'
+                    ? 'h-full w-auto  max-w-60 rounded-lg '
+                    : 'h-full w-32 max-w-30 opacity-80 grayscale'
                 "
               />
             </div>
