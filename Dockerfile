@@ -1,6 +1,6 @@
-ARG NODE_VERSION=20-bookworm-slim
+ARG NODE_VERSION=22.14.0-alpine
 
-FROM node:${NODE_VERSION} AS build
+FROM docker.arvancloud.ir/node:${NODE_VERSION} AS build
 WORKDIR /app
 
 # Keep memory usage predictable on small machines; override via build args if needed.
@@ -15,7 +15,7 @@ RUN pnpm install --frozen-lockfile
 COPY . .
 RUN pnpm build
 
-FROM node:${NODE_VERSION} AS runtime
+FROM docker.arvancloud.ir/node:${NODE_VERSION} AS runtime
 WORKDIR /app
 
 ENV NODE_ENV=production
