@@ -64,6 +64,10 @@ const { data, pending, error } = await useFetch<ProductsResponse>('/api/products
   default: () => ({ page: 1, items: [], hasNext: false, sections: [] })
 })
 
+function productTo(toSlug: string) {
+  return `/products/${encodeURIComponent(toSlug)}`
+}
+
 const sections = computed<ProductSection[]>(() => {
   const fromData = data.value?.sections ?? []
   if (fromData.length) {
@@ -179,32 +183,28 @@ const sections = computed<ProductSection[]>(() => {
                 :key="p.href"
                 class="group flex h-full flex-col overflow-hidden rounded-[26px] bg-[linear-gradient(180deg,#7a7a7a_0%,#1f1f1f_100%)] p-4 shadow-[0_18px_40px_rgba(0,0,0,0.18)]"
               >
-                <a
-                  :href="p.href"
-                  target="_blank"
-                  rel="noopener"
+                <NuxtLink
+                  :to="productTo(p.slug)"
                   class="flex aspect-square items-center justify-center overflow-hidden rounded-[20px]"
                 >
                   <NuxtImg :src="p.image" :alt="p.title" class="h-full w-full object-contain transition duration-500 group-hover:scale-[1.04]" />
-                </a>
+                </NuxtLink>
 
                 <div class="mt-4 flex flex-1 flex-col items-center text-center text-white">
-                  <a :href="p.href" target="_blank" rel="noopener" class="text-sm font-semibold leading-7 text-white/90 hover:text-white">
+                  <NuxtLink :to="productTo(p.slug)" class="text-sm font-semibold leading-7 text-white/90 hover:text-white">
                     {{ p.title }}
-                  </a>
+                  </NuxtLink>
                   <p class="mt-2 text-sm font-semibold text-white">
                     {{ p.price || 'تماس بگیرید' }}
                   </p>
 
-                  <a
-                    v-if="p.cartHref || p.href"
-                    :href="p.cartHref || p.href"
-                    target="_blank"
-                    rel="noopener"
+                  <NuxtLink
+                    v-if="p.slug"
+                    :to="productTo(p.slug)"
                     class="mt-4 inline-flex items-center justify-center rounded-md bg-amber-500 px-4 py-2 text-xs font-semibold text-white shadow-[0_10px_20px_rgba(248,144,20,0.35)] transition hover:bg-amber-600"
                   >
                     افزودن به سبد خرید
-                  </a>
+                  </NuxtLink>
                 </div>
               </article>
             </div>
