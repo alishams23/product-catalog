@@ -1,3 +1,5 @@
+import type { H3Event } from 'h3'
+
 type Product = {
   title: string
   href: string
@@ -20,186 +22,114 @@ type ProductsResponse = {
   sections: ProductSection[]
 }
 
-function decodeHtmlEntities(input: string): string {
-  return input
-    .replaceAll('&amp;', '&')
-    .replaceAll('&quot;', '"')
-    .replaceAll('&#039;', '\'')
-    .replaceAll('&nbsp;', ' ')
-    .replaceAll('&lt;', '<')
-    .replaceAll('&gt;', '>')
-    .replaceAll('&ldquo;', '“')
-    .replaceAll('&rdquo;', '”')
-    .replaceAll(/&#x([0-9a-fA-F]+);/g, (_, hex: string) => String.fromCodePoint(Number.parseInt(hex, 16)))
-    .replaceAll(/&#([0-9]+);/g, (_, num: string) => String.fromCodePoint(Number.parseInt(num, 10)))
+type ApiCategory = {
+  id: number
+  name: string
+  slug: string
 }
 
-function stripTags(input: string): string {
-  return input.replaceAll(/<[^>]*>/g, '')
+type ApiProductListItem = {
+  id: number
+  title: string
+  slug: string
+  short_description?: string
+  primary_image?: string | { url?: string; alt_text?: string }
+  categories?: ApiCategory[]
+  is_featured?: boolean
+  published_at?: string
 }
 
-function normalizeHref(href?: string): string | undefined {
-  if (!href) return undefined
-  if (href.startsWith('http://') || href.startsWith('https://')) return href
-  return `https://mbico.ir${href}`
+type ApiListResponse = {
+  count: number
+  next: string | null
+  previous: string | null
+  results: ApiProductListItem[]
 }
 
-function extractDivBlock(html: string, startIndex: number): string | undefined {
-  const firstOpen = html.indexOf('<div', startIndex)
-  if (firstOpen === -1) return undefined
+const API_BASE_URL = 'http://156.236.31.140:8001'
 
-  let depth = 0
-  let cursor = firstOpen
+function isVideoUrl(url: string): boolean {
+  return /\.(mp4|webm|mov|m4v)(\?.*)?$/i.test(url)
+}
 
-  while (cursor < html.length) {
-    const nextOpen = html.indexOf('<div', cursor)
-    const nextClose = html.indexOf('</div', cursor)
+function coerceImageUrl(value: ApiProductListItem['primary_image']): string {
+  if (typeof value === 'string') return value
+  if (value && typeof value === 'object' && typeof value.url === 'string') return value.url
+  return ''
+}
 
-    if (nextClose === -1) return undefined
-
-    if (nextOpen !== -1 && nextOpen < nextClose) {
-      depth += 1
-      cursor = nextOpen + 4
-      continue
+function appendQuery(params: URLSearchParams, key: string, value: unknown) {
+  if (value === undefined || value === null || value === '') return
+  if (Array.isArray(value)) {
+    for (const entry of value) {
+      if (entry !== undefined && entry !== null && entry !== '') {
+        params.append(key, String(entry))
+      }
     }
-
-    depth -= 1
-    cursor = nextClose + 5
-
-    if (depth === 0) {
-      const closeEnd = html.indexOf('>', cursor)
-      return closeEnd === -1 ? html.slice(firstOpen) : html.slice(firstOpen, closeEnd + 1)
-    }
+    return
   }
-
-  return undefined
+  params.set(key, String(value))
 }
 
-function extractParagraphText(segment: string): string | undefined {
-  const match = /<p[^>]*>(.*?)<\/p>/s.exec(segment)
-  if (!match) return undefined
-  const text = decodeHtmlEntities(stripTags(match[1] ?? '')).trim()
-  return text || undefined
-}
-
-function parseProducts(html: string, limit = 24): Product[] {
-  const products: Product[] = []
-  const seen = new Set<string>()
-
-  const linkRe = /<a href="(https:\/\/mbico\.ir\/products\/[^"]+)"[^>]*aria-label="([^"]+)"/g
-  while (products.length < limit) {
-    const match = linkRe.exec(html)
-    if (!match) break
-
-    const href = decodeHtmlEntities(match[1] ?? '')
-    if (!href || seen.has(href)) continue
-
-    const slugEncoded = /https:\/\/mbico\.ir\/products\/([^/?#]+)(?:\/|$)/.exec(href)?.[1]
-    if (!slugEncoded) continue
-
-    let slug = slugEncoded
-    try {
-      slug = decodeURIComponent(slugEncoded)
-    } catch {
-      slug = slugEncoded
-    }
-
-    const title = decodeHtmlEntities(match[2] ?? '').trim()
-    const after = html.slice(match.index, match.index + 6000)
-
-    const img
-      = /data-lazy-src="([^"]+)"/.exec(after)?.[1]
-        ?? /data-src="([^"]+)"/.exec(after)?.[1]
-        ?? /<noscript>\s*<img[^>]*src="([^"]+)"/.exec(after)?.[1]
-
-    if (!img) continue
-
-    const priceRaw = /<span class="woocommerce-Price-amount amount"><bdi>(.*?)<\/bdi>/.exec(after)?.[1]
-    const price = priceRaw ? decodeHtmlEntities(stripTags(priceRaw)).trim() : undefined
-    const cartHrefRaw = /<a href="([^"]+)"[^>]*add_to_cart_button/.exec(after)?.[1]
-    const cartHref = cartHrefRaw ? normalizeHref(decodeHtmlEntities(cartHrefRaw)) : undefined
-
-    const image = decodeHtmlEntities(img)
-    seen.add(href)
-    products.push({ title, href, image, price, slug, cartHref })
-  }
-
-  return products
-}
-
-function extractMainContent(html: string): string {
-  const match = /<main[^>]*>([\s\S]*?)<\/main>/i.exec(html)
-  return match?.[1] ?? html
-}
-
-function extractSections(html: string): ProductSection[] {
-  const sections: ProductSection[] = []
-  const titleRe = /<span class="section-title-main"\s*>(.*?)<\/span>/g
-
-  const matches: Array<{ title: string; start: number; end: number }> = []
-  let match: RegExpExecArray | null
-  while ((match = titleRe.exec(html))) {
-    const title = decodeHtmlEntities(stripTags(match[1] ?? '')).trim()
-    if (!title) continue
-    matches.push({ title, start: match.index, end: match.index + match[0].length })
-  }
-
-  for (let i = 0; i < matches.length; i += 1) {
-    const current = matches[i]
-    if (!current) continue
-
-    const sliceStart = current.end
-    const sliceEnd = matches[i + 1]?.start ?? html.length
-    const slice = html.slice(sliceStart, sliceEnd)
-    const listOffset = slice.indexOf('<div class="row mbi-productlist-gradient')
-    if (listOffset === -1) continue
-
-    const listStart = sliceStart + listOffset
-    const listBlock = extractDivBlock(html, listStart)
-    if (!listBlock) continue
-
-    const items = parseProducts(listBlock, 200)
-    if (!items.length) continue
-
-    const description = extractParagraphText(html.slice(sliceStart, listStart))
-    sections.push({ title: current.title, description, items })
-  }
-
-  return sections
-}
-
-export default defineCachedEventHandler(async (event) => {
+const handler = async (event: H3Event) => {
   const query = getQuery(event)
   const rawPage = Array.isArray(query.page) ? query.page[0] : query.page
   const page = Math.max(1, Number.parseInt(String(rawPage ?? '1'), 10) || 1)
 
-  const url = page === 1 ? 'https://mbico.ir/products/' : `https://mbico.ir/products/page/${page}/`
-  const res = await fetch(url, {
-    headers: {
-      'user-agent':
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36'
-    }
-  })
+  const params = new URLSearchParams()
+  params.set('page', String(page))
+  appendQuery(params, 'page_size', Array.isArray(query.page_size) ? query.page_size[0] : query.page_size)
+  appendQuery(params, 'category', Array.isArray(query.category) ? query.category[0] : query.category)
+  appendQuery(params, 'root_category', Array.isArray(query.root_category) ? query.root_category[0] : query.root_category)
+  appendQuery(params, 'is_featured', Array.isArray(query.is_featured) ? query.is_featured[0] : query.is_featured)
+  appendQuery(params, 'search', Array.isArray(query.search) ? query.search[0] : query.search)
+  appendQuery(params, 'ordering', Array.isArray(query.ordering) ? query.ordering[0] : query.ordering)
+
+  const url = `${API_BASE_URL}/api/products/?${params.toString()}`
+  const res = await fetch(url)
 
   if (!res.ok) {
     throw createError({
       statusCode: res.status,
-      statusMessage: `MBICO products fetch failed (${res.status})`
+      statusMessage: `Product API fetch failed (${res.status})`
     })
   }
 
-  const html = await res.text()
-  const mainHtml = extractMainContent(html)
-  const items = parseProducts(mainHtml)
-  const sections = extractSections(mainHtml)
-  const hasNext = html.includes('rel="next"') || html.includes(`/products/page/${page + 1}/`)
+  const data = await res.json() as ApiListResponse
+  const items: Product[] = (data.results ?? []).map((item) => ({
+    title: item.title ?? '',
+    href: `/products/${encodeURIComponent(item.slug ?? '')}`,
+    image: (() => {
+      const url = coerceImageUrl(item.primary_image)
+      if (!url || isVideoUrl(url)) return ''
+      return url
+    })(),
+    slug: item.slug ?? ''
+  }))
 
-  return { page, items, hasNext, sections } satisfies ProductsResponse
-}, {
-  maxAge: 60 * 30,
-  getKey(event) {
-    const query = getQuery(event)
-    const rawPage = Array.isArray(query.page) ? query.page[0] : query.page
-    return `mbico-products:v2:${rawPage ?? '1'}`
-  }
-})
+  return {
+    page,
+    items,
+    hasNext: Boolean(data.next),
+    sections: []
+  } satisfies ProductsResponse
+}
+
+export default import.meta.dev
+  ? defineEventHandler(handler)
+  : defineCachedEventHandler(handler, {
+      maxAge: 60 * 30,
+      getKey(event) {
+        const query = getQuery(event)
+        const rawPage = Array.isArray(query.page) ? query.page[0] : query.page
+        const params = new URLSearchParams()
+        params.set('page', String(rawPage ?? '1'))
+        appendQuery(params, 'page_size', Array.isArray(query.page_size) ? query.page_size[0] : query.page_size)
+        appendQuery(params, 'category', Array.isArray(query.category) ? query.category[0] : query.category)
+        appendQuery(params, 'root_category', Array.isArray(query.root_category) ? query.root_category[0] : query.root_category)
+        appendQuery(params, 'is_featured', Array.isArray(query.is_featured) ? query.is_featured[0] : query.is_featured)
+        appendQuery(params, 'search', Array.isArray(query.search) ? query.search[0] : query.search)
+        appendQuery(params, 'ordering', Array.isArray(query.ordering) ? query.ordering[0] : query.ordering)
+        return `product-list:${params.toString()}`
+      }
+    })

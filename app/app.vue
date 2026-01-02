@@ -28,14 +28,13 @@ useSeoMeta({
   twitterCard: 'summary_large_image'
 })
 
-const route = useRoute()
-const mainOffsetClass = computed(() => (route.path === '/' ? '' : 'pt-16'))
+useRoute()
 </script>
 
 <template>
   <div class="min-h-dvh bg-white text-zinc-900">
     <SiteHeader />
-    <main :class="mainOffsetClass">
+    <main>
       <NuxtPage />
     </main>
     <SiteFooter />

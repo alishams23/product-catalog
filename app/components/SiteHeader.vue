@@ -5,8 +5,9 @@ type MegaTab = { key: string, label: string, href: string, items: NavLink[] }
 const isMobileOpen = ref(false)
 const isProductsOpen = ref(false)
 const activeProductsTab = ref<'ovens' | 'equipment' | 'mobile'>('ovens')
-const isAtTop = ref(true)
-const scrollThresholdPx = 8
+const isAtTop = useState<boolean>('header:isAtTop', () => true)
+const baseScrollThresholdPx = 8
+const productScrollThresholdPx = 140
 
 const topLinks: NavLink[] = [
   { label: 'درباره ما', href: '/about' },
@@ -88,10 +89,17 @@ function closeAll() {
 }
 
 const route = useRoute()
-const showMenu = computed(() => route.path !== '/' || !isAtTop.value)
+const showMenu = computed(() => !isAtTop.value)
+const isProductPage = computed(() => route.path.includes('/products'))
+const isTransparentHeader = computed(() => isAtTop.value)
+const useLightHeaderText = computed(() => isProductPage.value && isAtTop.value)
 
 function readScrollY() {
   return window.scrollY || window.pageYOffset || 0
+}
+
+function activeScrollThreshold() {
+  return isProductPage.value ? productScrollThresholdPx : baseScrollThresholdPx
 }
 
 let rafId: number | null = null
@@ -99,15 +107,15 @@ function onScroll() {
   if (rafId != null) return
   rafId = window.requestAnimationFrame(() => {
     rafId = null
-    isAtTop.value = readScrollY() <= scrollThresholdPx
+    isAtTop.value = readScrollY() <= activeScrollThreshold()
     if (!showMenu.value) closeAll()
   })
 }
 
 onMounted(() => {
-  isAtTop.value = readScrollY() <= scrollThresholdPx
+  isAtTop.value = readScrollY() <= activeScrollThreshold()
   window.requestAnimationFrame(() => {
-    isAtTop.value = readScrollY() <= scrollThresholdPx
+    isAtTop.value = readScrollY() <= activeScrollThreshold()
   })
   window.addEventListener('scroll', onScroll, { passive: true })
 })
@@ -121,7 +129,7 @@ onBeforeUnmount(() => {
 watch(() => route.fullPath, async () => {
   closeAll()
   await nextTick()
-  isAtTop.value = readScrollY() <= scrollThresholdPx
+  isAtTop.value = readScrollY() <= activeScrollThreshold()
 })
 </script>
 
@@ -135,8 +143,15 @@ watch(() => route.fullPath, async () => {
     leave-to-class="-translate-y-3 opacity-0"
   >
     <header
-      v-show="showMenu"
-      class="fixed inset-x-0 top-0 z-50 border-b border-zinc-200 bg-white/95 shadow-sm backdrop-blur"
+      v-if="showMenu"
+      :class="[
+        'fixed inset-x-0 top-0 z-50 transition-colors duration-300 text-zinc-800',
+        isTransparentHeader
+          ? '!border-transparent !bg-transparent !shadow-none !backdrop-blur-0'
+          : 'border-b border-zinc-200 bg-white/95 shadow-sm backdrop-blur',
+        useLightHeaderText ? '!text-white' : ''
+      ]"
+      :style="isTransparentHeader ? { backgroundColor: 'transparent', borderColor: 'transparent' } : undefined"
     >
     <div class="mx-auto max-w-6xl px-4">
       <div class="flex items-center gap-3 py-3">
@@ -144,7 +159,10 @@ watch(() => route.fullPath, async () => {
           <MbicoLogo class="h-9 w-auto" />
         </NuxtLink>
 
-        <nav class="hidden lg:flex items-center gap-6 text-sm font-medium text-zinc-800">
+        <nav :class="[
+          'hidden lg:flex items-center gap-6 text-sm font-medium',
+          useLightHeaderText ? 'text-white/90' : 'text-zinc-800'
+        ]">
           <div
             class="relative"
             @mouseenter="openProductsMenu"
@@ -158,7 +176,7 @@ watch(() => route.fullPath, async () => {
               @click="isProductsOpen ? closeProductsMenu() : openProductsMenu()"
             >
               محصولات
-              <span class="text-zinc-500">▾</span>
+              <span :class="useLightHeaderText ? 'text-white/70' : 'text-zinc-500'">▾</span>
             </button>
 
             <div v-if="isProductsOpen" class="absolute right-0 top-full pt-3" role="menu" @mouseenter="openProductsMenu" @mouseleave="scheduleCloseProductsMenu">
@@ -271,7 +289,12 @@ watch(() => route.fullPath, async () => {
 
           <button
             type="button"
-            class="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-xl border border-zinc-200 hover:bg-zinc-50"
+            :class="[
+              'lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-xl border transition',
+              useLightHeaderText
+                ? 'border-white/40 text-white hover:bg-white/10'
+                : 'border-zinc-200 text-zinc-900 hover:bg-zinc-50'
+            ]"
             aria-label="باز کردن منو"
             @click="isMobileOpen = true"
           >

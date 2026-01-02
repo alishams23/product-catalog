@@ -4,6 +4,9 @@ type BlogPostDetail = {
   title: string
   image?: string
   description?: string
+  contentHtml?: string
+  author?: string
+  publishedAt?: string
   href: string
 }
 
@@ -16,6 +19,29 @@ const { data, pending, error } = await useFetch<BlogPostDetail>(() => `/api/blog
     title: slug.value,
     href: ''
   })
+})
+
+const dateFormatter = new Intl.DateTimeFormat('fa-IR', {
+  day: '2-digit',
+  month: 'long',
+  year: 'numeric'
+})
+
+const formattedDate = computed(() => {
+  const value = data.value?.publishedAt
+  if (!value) return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  return dateFormatter.format(date)
+})
+
+const metaLine = computed(() => {
+  const dateLabel = formattedDate.value
+  const author = data.value?.author?.trim()
+  if (!dateLabel && !author) return ''
+  const datePart = dateLabel ? `نوشته شده در تاریخ ${dateLabel}` : ''
+  const authorPart = author ? `توسط ${author}` : ''
+  return [datePart, authorPart].filter(Boolean).join(' ')
 })
 
 useSeoMeta({
@@ -84,4 +110,3 @@ useSeoMeta({
     </section>
   </div>
 </template>
-

@@ -3,6 +3,9 @@ type BlogPostDetail = {
   title: string
   image?: string
   description?: string
+  contentHtml?: string
+  author?: string
+  publishedAt?: string
   href: string
 }
 
@@ -22,6 +25,35 @@ function decodeHtmlEntities(input: string): string {
 
 function stripTags(input: string): string {
   return input.replaceAll(/<[^>]*>/g, '')
+}
+
+function extractMetaContent(html: string, key: string, attribute: 'property' | 'name' = 'property'): string | undefined {
+  const pattern = new RegExp(`<meta\\s+${attribute}="${key}"\\s+content="([^"]+)"`, 'i')
+  return pattern.exec(html)?.[1]
+}
+
+function sanitizeHtml(input: string): string {
+  return input
+    .replaceAll(/<script[\s\S]*?<\/script>/gi, '')
+    .replaceAll(/<style[\s\S]*?<\/style>/gi, '')
+    .replaceAll(/<noscript[\s\S]*?<\/noscript>/gi, '')
+    .trim()
+}
+
+function extractContentHtml(html: string): string {
+  const patterns: RegExp[] = [
+    /<div[^>]+class="[^"]*entry-content[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
+    /<div[^>]+class="[^"]*elementor-widget-theme-post-content[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
+    /<div[^>]+class="[^"]*post-content[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
+    /<article[^>]*class="[^"]*post[^"]*"[^>]*>([\s\S]*?)<\/article>/i
+  ]
+
+  for (const pattern of patterns) {
+    const match = pattern.exec(html)
+    if (match?.[1]) return sanitizeHtml(match[1])
+  }
+
+  return ''
 }
 
 export default defineCachedEventHandler(async (event) => {
@@ -51,12 +83,20 @@ export default defineCachedEventHandler(async (event) => {
   const image = decodeHtmlEntities(/<meta property="og:image" content="([^"]+)"/.exec(html)?.[1] ?? '')
   const descriptionRaw = /<meta property="og:description" content="([^"]+)"/.exec(html)?.[1]
   const description = descriptionRaw ? decodeHtmlEntities(descriptionRaw).trim() : undefined
+  const authorRaw = extractMetaContent(html, 'author', 'name') ?? extractMetaContent(html, 'article:author')
+  const author = authorRaw ? decodeHtmlEntities(stripTags(authorRaw)).trim() : undefined
+  const publishedAt = extractMetaContent(html, 'article:published_time')
+    ?? extractMetaContent(html, 'article:modified_time')
+  const contentHtml = extractContentHtml(html)
 
   return {
     slug,
     title,
     image: image || undefined,
     description,
+    contentHtml: contentHtml || undefined,
+    author: author || undefined,
+    publishedAt: publishedAt || undefined,
     href
   } satisfies BlogPostDetail
 }, {
@@ -66,4 +106,3 @@ export default defineCachedEventHandler(async (event) => {
     return `mbico-blog:${slug}`
   }
 })
-
