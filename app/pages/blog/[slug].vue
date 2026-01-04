@@ -7,7 +7,14 @@ type BlogPostDetail = {
   contentHtml?: string
   author?: string
   publishedAt?: string
+  categories?: BlogCategory[]
   href: string
+}
+
+type BlogCategory = {
+  id: number
+  name: string
+  slug: string
 }
 
 const route = useRoute()
@@ -52,61 +59,172 @@ useSeoMeta({
 
 <template>
   <div>
-    <header class="bg-[linear-gradient(180deg,#c8a35f_0%,#b48a47_55%,#9a6c2d_100%)]">
-      <div class="mx-auto max-w-6xl px-4 py-10">
-        <NuxtLink to="/blog" class="inline-flex items-center gap-2 text-sm font-semibold text-zinc-900/80 hover:text-zinc-900">
-          <span>بازگشت</span>
-          <span class="text-zinc-700">←</span>
-        </NuxtLink>
-        <h1 class="mt-4 text-2xl font-black tracking-tight text-zinc-900 sm:text-3xl">
+    <header class="bg-white">
+      <div class="mx-auto max-w-5xl px-4 pb-8 pt-12 text-right">
+        <div class="flex items-center justify-end">
+          <NuxtLink to="/blog" class="inline-flex items-center gap-2 text-xs font-semibold text-zinc-500 hover:text-zinc-700">
+            <span>بازگشت</span>
+            <span class="text-zinc-400">←</span>
+          </NuxtLink>
+        </div>
+        <h1 class="mt-6 text-2xl font-black tracking-tight text-amber-600 sm:text-3xl lg:text-4xl">
           {{ data?.title }}
         </h1>
+        <div class="mt-4 h-1 w-12 rounded-full bg-amber-500/80 ml-auto" />
+        <p v-if="metaLine" class="mt-4 text-xs text-zinc-500">
+          {{ metaLine }}
+        </p>
+        <div v-if="data?.categories?.length" class="mt-4 flex flex-wrap justify-end gap-2 text-xs text-zinc-500">
+          <span
+            v-for="cat in data.categories"
+            :key="cat.id"
+            class="rounded-full border border-zinc-200 bg-zinc-50 px-2.5 py-1"
+          >
+            {{ cat.name }}
+          </span>
+        </div>
       </div>
     </header>
 
-    <div class="h-2 w-full bg-[#f89014]" />
+    <section class="bg-white">
+      <div class="mx-auto max-w-5xl px-4">
+        <div class="overflow-hidden rounded-3xl bg-zinc-100 shadow-[0_12px_32px_rgba(0,0,0,0.08)] ring-1 ring-zinc-200/80">
+          <div v-if="pending" class="aspect-[16/9] w-full animate-pulse bg-zinc-200/70" />
+          <NuxtImg
+            v-else-if="data?.image"
+            :src="data.image"
+            :alt="data.title"
+            class="aspect-[16/9] w-full object-cover"
+            sizes="(max-width: 768px) 100vw, 1000px"
+          />
+          <div v-else class="aspect-[16/9] w-full bg-zinc-100" />
+        </div>
+      </div>
+    </section>
 
-    <section class="bg-[radial-gradient(circle_at_top,#f5f5f5_0%,#e3e3e3_48%,#d2d2d2_100%)] shadow-[inset_0_40px_80px_rgba(0,0,0,0.12)]">
-      <div class="mx-auto max-w-6xl px-4 py-10">
+    <section class="bg-white">
+      <div class="mx-auto max-w-3xl px-4 py-10">
         <div v-if="error" class="rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
           دریافت مقاله با خطا مواجه شد.
         </div>
 
-        <div v-else class="grid gap-8 lg:grid-cols-2">
-          <div class="overflow-hidden rounded-3xl bg-white ring-1 ring-black/5">
-            <div v-if="pending" class="aspect-square w-full animate-pulse bg-zinc-100" />
-            <NuxtImg v-else-if="data?.image" :src="data.image" :alt="data.title" class="aspect-square w-full object-cover" />
-            <div v-else class="aspect-square w-full bg-zinc-100" />
+        <div v-else>
+          <p v-if="data?.description && !data?.contentHtml" class="text-sm leading-8 text-zinc-700">
+            {{ data.description }}
+          </p>
+          <div v-if="data?.contentHtml" class="mt-8">
+            <div class="ql-container ql-snow" dir="rtl">
+              <div class="ql-editor" v-html="data.contentHtml" />
+            </div>
           </div>
 
-          <div class="rounded-3xl bg-white p-6 ring-1 ring-black/5">
-            <h2 class="text-sm font-black text-zinc-900">
-              خلاصه
-            </h2>
-            <p class="mt-3 text-sm leading-8 text-zinc-700">
-              {{ data?.description || 'برای مشاهده متن کامل، روی دکمه زیر کلیک کنید.' }}
-            </p>
-
-            <div class="mt-6 flex flex-wrap items-center gap-3">
-              <a
-                v-if="data?.href"
-                class="rounded-full bg-amber-500 px-5 py-2 text-sm font-semibold text-white shadow hover:bg-amber-600"
-                :href="data.href"
-                target="_blank"
-                rel="noopener"
-              >
-                مشاهده متن کامل
-              </a>
-              <NuxtLink
-                class="rounded-full border border-zinc-200 bg-white px-5 py-2 text-sm font-semibold text-zinc-800 shadow-sm hover:bg-zinc-50"
-                to="/blog"
-              >
-                بازگشت به وبلاگ
-              </NuxtLink>
-            </div>
+          <div class="mt-10 flex justify-center">
+            <NuxtLink
+              class="rounded-full border border-zinc-200 bg-white px-5 py-2 text-sm font-semibold text-zinc-800 shadow-sm hover:bg-zinc-50"
+              to="/blog"
+            >
+              بازگشت به وبلاگ
+            </NuxtLink>
           </div>
         </div>
       </div>
     </section>
   </div>
 </template>
+
+<style scoped>
+:deep(.ql-container) {
+  border: 0;
+  font-family: inherit;
+  background: transparent;
+}
+
+:deep(.ql-editor) {
+  padding: 0;
+  font-size: 0.95rem;
+  line-height: 2;
+  color: #3f3f46;
+  text-align: justify;
+  direction: rtl;
+}
+
+:deep(.ql-editor > *:first-child) {
+  margin-top: 0;
+}
+
+:deep(.ql-editor p) {
+  margin-top: 1rem;
+  text-align: justify;
+}
+
+:deep(.ql-editor h2) {
+  margin-top: 2rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #18181b;
+}
+
+:deep(.ql-editor h3) {
+  margin-top: 1.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #27272a;
+}
+
+:deep(.ql-editor a) {
+  color: #d97706;
+  font-weight: 600;
+}
+
+:deep(.ql-editor ul),
+:deep(.ql-editor ol) {
+  margin-top: 1rem;
+  padding-right: 1.5rem;
+}
+
+:deep(.ql-editor ul) {
+  list-style: disc;
+}
+
+:deep(.ql-editor ol) {
+  list-style: decimal;
+}
+
+:deep(.ql-editor li) {
+  margin-top: 0.5rem;
+}
+
+:deep(.ql-editor blockquote) {
+  margin-top: 1.5rem;
+  border-right: 3px solid #f59e0b;
+  padding-right: 1rem;
+  color: #52525b;
+}
+
+:deep(.ql-editor img) {
+  margin: 1.5rem auto;
+  width: 100%;
+  border-radius: 1rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+:deep(.ql-editor .ql-align-center) {
+  text-align: center;
+}
+
+:deep(.ql-editor .ql-align-right) {
+  text-align: right;
+}
+
+:deep(.ql-editor .ql-align-left) {
+  text-align: left;
+}
+
+:deep(.ql-editor .ql-align-justify) {
+  text-align: justify;
+}
+
+:deep(.ql-editor .ql-direction-rtl) {
+  direction: rtl;
+}
+</style>

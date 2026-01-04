@@ -1,3 +1,5 @@
+import type { H3Event } from 'h3'
+
 type BlogPostDetail = {
   slug: string
   title: string
@@ -9,100 +11,60 @@ type BlogPostDetail = {
   href: string
 }
 
-function decodeHtmlEntities(input: string): string {
-  return input
-    .replaceAll('&amp;', '&')
-    .replaceAll('&quot;', '"')
-    .replaceAll('&#039;', '\'')
-    .replaceAll('&nbsp;', ' ')
-    .replaceAll('&lt;', '<')
-    .replaceAll('&gt;', '>')
-    .replaceAll('&ldquo;', '“')
-    .replaceAll('&rdquo;', '”')
-    .replaceAll(/&#x([0-9a-fA-F]+);/g, (_, hex: string) => String.fromCodePoint(Number.parseInt(hex, 16)))
-    .replaceAll(/&#([0-9]+);/g, (_, num: string) => String.fromCodePoint(Number.parseInt(num, 10)))
+type BlogDetailResponse = {
+  id: number
+  title: string
+  slug: string
+  image?: string | null
+  excerpt?: string
+  body?: string
+  categories?: Array<{ id: number; name: string; slug: string }>
+  published_at?: string | null
 }
 
-function stripTags(input: string): string {
-  return input.replaceAll(/<[^>]*>/g, '')
-}
+const API_BASE_URL = 'http://156.236.31.140:8001'
 
-function extractMetaContent(html: string, key: string, attribute: 'property' | 'name' = 'property'): string | undefined {
-  const pattern = new RegExp(`<meta\\s+${attribute}="${key}"\\s+content="([^"]+)"`, 'i')
-  return pattern.exec(html)?.[1]
-}
+const handler = async (event: H3Event) => {
+  const slug = getRouterParam(event, 'slug') ?? ''
 
-function sanitizeHtml(input: string): string {
-  return input
-    .replaceAll(/<script[\s\S]*?<\/script>/gi, '')
-    .replaceAll(/<style[\s\S]*?<\/style>/gi, '')
-    .replaceAll(/<noscript[\s\S]*?<\/noscript>/gi, '')
-    .trim()
-}
-
-function extractContentHtml(html: string): string {
-  const patterns: RegExp[] = [
-    /<div[^>]+class="[^"]*entry-content[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
-    /<div[^>]+class="[^"]*elementor-widget-theme-post-content[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
-    /<div[^>]+class="[^"]*post-content[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
-    /<article[^>]*class="[^"]*post[^"]*"[^>]*>([\s\S]*?)<\/article>/i
-  ]
-
-  for (const pattern of patterns) {
-    const match = pattern.exec(html)
-    if (match?.[1]) return sanitizeHtml(match[1])
+  if (!slug) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Blog slug is required'
+    })
   }
 
-  return ''
-}
-
-export default defineCachedEventHandler(async (event) => {
-  const slug = getRouterParam(event, 'slug') ?? ''
-  const encodedSlug = encodeURIComponent(slug)
-  const href = `https://mbico.ir/blog/${encodedSlug}/`
-
-  const res = await fetch(href, {
-    headers: {
-      'user-agent':
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36'
-    }
-  })
+  const url = `${API_BASE_URL}/api/blogs/${encodeURIComponent(slug)}/`
+  const res = await fetch(url)
 
   if (!res.ok) {
     throw createError({
       statusCode: res.status,
-      statusMessage: `MBICO blog fetch failed (${res.status})`
+      statusMessage: `Blog API fetch failed (${res.status})`
     })
   }
 
-  const html = await res.text()
-
-  const titleRaw = /<meta property="og:title" content="([^"]+)"/.exec(html)?.[1]
-  const title = decodeHtmlEntities(stripTags(titleRaw ?? slug)).trim()
-
-  const image = decodeHtmlEntities(/<meta property="og:image" content="([^"]+)"/.exec(html)?.[1] ?? '')
-  const descriptionRaw = /<meta property="og:description" content="([^"]+)"/.exec(html)?.[1]
-  const description = descriptionRaw ? decodeHtmlEntities(descriptionRaw).trim() : undefined
-  const authorRaw = extractMetaContent(html, 'author', 'name') ?? extractMetaContent(html, 'article:author')
-  const author = authorRaw ? decodeHtmlEntities(stripTags(authorRaw)).trim() : undefined
-  const publishedAt = extractMetaContent(html, 'article:published_time')
-    ?? extractMetaContent(html, 'article:modified_time')
-  const contentHtml = extractContentHtml(html)
+  const data = await res.json() as BlogDetailResponse
 
   return {
-    slug,
-    title,
-    image: image || undefined,
-    description,
-    contentHtml: contentHtml || undefined,
-    author: author || undefined,
-    publishedAt: publishedAt || undefined,
-    href
+    slug: data.slug ?? slug,
+    title: data.title ?? slug,
+    image: data.image ?? undefined,
+    description: data.excerpt?.trim() || undefined,
+    contentHtml: data.body?.trim() || undefined,
+    author: undefined,
+    publishedAt: data.published_at ?? undefined,
+    categories: data.categories ?? [],
+    href: ''
   } satisfies BlogPostDetail
-}, {
-  maxAge: 60 * 60,
-  getKey(event) {
-    const slug = getRouterParam(event, 'slug') ?? ''
-    return `mbico-blog:${slug}`
-  }
-})
+}
+
+export default import.meta.dev
+  ? defineEventHandler(handler)
+  : defineCachedEventHandler(handler, {
+      maxAge: 60 * 60,
+      getKey(event) {
+        const slug = getRouterParam(event, 'slug') ?? ''
+        return `blog-detail:${slug}`
+      }
+    })
