@@ -147,9 +147,11 @@ function productTo(slug: string) {
             <h1 class="mt-4 text-3xl font-black tracking-tight sm:text-4xl">
               {{ categoryTitle || 'Category' }}
             </h1>
-            <p v-if="categoryDescription" class="mt-4 text-sm leading-8 text-white/80">
-              {{ categoryDescription }}
-            </p>
+            <div v-if="categoryDescription" class="mt-4">
+              <div class="ql-container ql-snow" dir="rtl">
+                <div class="ql-editor" v-html="categoryDescription" />
+              </div>
+            </div>
             <p v-else class="mt-4 text-sm leading-8 text-white/60">
               Details for this category will be available soon.
             </p>
@@ -268,3 +270,71 @@ function productTo(slug: string) {
     </section>
   </div>
 </template>
+
+<style scoped>
+:deep(.ql-container) {
+  border: 0;
+  font-family: inherit;
+  background: transparent;
+}
+
+:deep(.ql-editor) {
+  padding: 0;
+  font-size: 0.875rem;
+  line-height: 2;
+  color: rgba(255, 255, 255, 0.8);
+  text-align: justify;
+  direction: rtl;
+}
+
+:deep(.ql-editor > *:first-child) {
+  margin-top: 0;
+}
+
+:deep(.ql-editor p) {
+  margin-top: 0.75rem;
+}
+
+:deep(.ql-editor a) {
+  color: #fbbf24;
+  font-weight: 600;
+}
+
+:deep(.ql-editor ul),
+:deep(.ql-editor ol) {
+  margin-top: 0.75rem;
+  padding-right: 1.25rem;
+}
+
+:deep(.ql-editor ul) {
+  list-style: disc;
+}
+
+:deep(.ql-editor ol) {
+  list-style: decimal;
+}
+
+:deep(.ql-editor li) {
+  margin-top: 0.35rem;
+}
+
+:deep(.ql-editor .ql-align-center) {
+  text-align: center;
+}
+
+:deep(.ql-editor .ql-align-right) {
+  text-align: right;
+}
+
+:deep(.ql-editor .ql-align-left) {
+  text-align: left;
+}
+
+:deep(.ql-editor .ql-align-justify) {
+  text-align: justify;
+}
+
+:deep(.ql-editor .ql-direction-rtl) {
+  direction: rtl;
+}
+</style>
