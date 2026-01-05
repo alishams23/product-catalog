@@ -1,4 +1,8 @@
 <script setup lang="ts">
+definePageMeta({
+  hideHeaderAtTop: true
+})
+
 type CategoryDetail = {
   id: number
   title: string

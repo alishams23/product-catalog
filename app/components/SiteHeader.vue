@@ -195,13 +195,8 @@ function closeAll() {
 }
 
 const route = useRoute()
-const normalizedPath = computed(() => route.path.replace(/\/+$/, '') || '/')
 const isProductPage = computed(() => route.path.includes('/products'))
-const isProductDetailPage = computed(() =>
-  normalizedPath.value.startsWith('/products/') && normalizedPath.value !== '/products'
-)
-const isTransparentHeader = computed(() => isAtTop.value)
-const useLightHeaderText = computed(() => isProductDetailPage.value && isAtTop.value)
+const shouldHideHeaderAtTop = computed(() => Boolean(route.meta?.hideHeaderAtTop))
 
 function readScrollY() {
   return window.scrollY || window.pageYOffset || 0
@@ -253,11 +248,10 @@ watch(() => route.fullPath, async () => {
   >
     <header
       :class="[
-        'fixed inset-x-0 top-0 z-50 transition-colors duration-300 text-zinc-800',
-        isTransparentHeader
-          ? 'border-b border-transparent bg-white/10 shadow-none backdrop-blur'
-          : 'border-b border-zinc-200 bg-white/95 shadow-sm backdrop-blur',
-        useLightHeaderText ? '!text-white' : ''
+        'fixed inset-x-0 top-0 z-50 text-zinc-900 backdrop-blur-xl backdrop-saturate-150 transition-all duration-500 ease-out',
+        shouldHideHeaderAtTop && isAtTop
+          ? 'pointer-events-none -translate-y-2 opacity-0 border-b border-white/40 bg-white/55 shadow-[0_4px_18px_rgba(0,0,0,0.06)]'
+          : 'translate-y-0 opacity-100 border-b border-white/60 bg-white/80 shadow-[0_8px_28px_rgba(0,0,0,0.12)]'
       ]"
     >
     <div class="mx-auto max-w-6xl px-4">
@@ -266,10 +260,7 @@ watch(() => route.fullPath, async () => {
           <MbicoLogo class="h-9 w-auto" />
         </NuxtLink>
 
-        <nav :class="[
-          'hidden lg:flex items-center gap-6 text-sm font-medium',
-          useLightHeaderText ? 'text-white/90' : 'text-zinc-800'
-        ]">
+        <nav class="hidden lg:flex items-center gap-6 text-sm font-medium text-zinc-800">
           <div
             class="relative"
             @mouseenter="openProductsMenu"
@@ -283,7 +274,7 @@ watch(() => route.fullPath, async () => {
               @click="isProductsOpen ? closeProductsMenu() : openProductsMenu()"
             >
               محصولات
-              <span :class="useLightHeaderText ? 'text-white/70' : 'text-zinc-500'">▾</span>
+              <span class="text-zinc-500">▾</span>
             </button>
 
             <div v-if="isProductsOpen" class="absolute right-0 top-full pt-3" role="menu" @mouseenter="openProductsMenu" @mouseleave="scheduleCloseProductsMenu">
@@ -396,12 +387,7 @@ watch(() => route.fullPath, async () => {
 
           <button
             type="button"
-            :class="[
-              'lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-xl border transition',
-              useLightHeaderText
-                ? 'border-white/40 text-white hover:bg-white/10'
-                : 'border-zinc-200 text-zinc-900 hover:bg-zinc-50'
-            ]"
+            class="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-xl border border-zinc-200 text-zinc-900 transition hover:bg-zinc-50"
             aria-label="باز کردن منو"
             @click="isMobileOpen = true"
           >

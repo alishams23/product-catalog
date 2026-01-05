@@ -1,3 +1,9 @@
+<script setup lang="ts">
+definePageMeta({
+  hideHeaderAtTop: true
+})
+</script>
+
 <template>
   <div>
     <LandingHeroSection />

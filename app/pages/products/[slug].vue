@@ -1,4 +1,8 @@
 <script setup lang="ts">
+definePageMeta({
+  hideHeaderAtTop: true
+})
+
 type ContentBlock =
   | { type: 'heading'; text: string }
   | { type: 'paragraph'; text: string }

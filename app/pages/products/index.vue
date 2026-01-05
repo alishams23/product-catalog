@@ -210,7 +210,7 @@ const sections = computed<ProductSection[]>(() => {
       </nav>
     </div>
 
-    <section class="mx-auto max-w-[1220px] px-4 pb-16 pt-6">
+    <section class="mx-auto max-w-[1220px] px-4 pb-16 pt-16">
       <h1 class="text-center text-3xl font-black text-zinc-900 sm:text-4xl">
         محصولات صنایع پخت مشهد
       </h1>
