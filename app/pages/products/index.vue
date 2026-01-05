@@ -6,6 +6,12 @@ type Product = {
   price?: string
   slug: string
   cartHref?: string
+  categories?: Array<{
+    name: string
+    slug: string
+    rootName?: string
+    rootSlug?: string
+  }>
 }
 
 type ProductSection = {
@@ -21,18 +27,6 @@ type ProductsResponse = {
   sections: ProductSection[]
 }
 
-type CategoryListItem = {
-  title: string
-  image?: string | null
-}
-
-type PaginatedCategoryList = {
-  count: number
-  next: string | null
-  previous: string | null
-  results: CategoryListItem[]
-}
-
 type RootCategory = {
   id: number
   name: string
@@ -42,6 +36,15 @@ type RootCategory = {
     name: string
     slug: string
   }>
+}
+
+type CategoryDetail = {
+  id: number
+  title: string
+  slug: string
+  image?: string | null
+  short_description?: string
+  description?: string
 }
 
 useSeoMeta({
@@ -60,19 +63,9 @@ const preferredSectionOrder = [
 ]
 
 const route = useRoute()
-const router = useRouter()
 
 function queryValue(value: string | string[] | null | undefined) {
   return Array.isArray(value) ? value[0] ?? undefined : value ?? undefined
-}
-
-function slugifyCategoryTitle(title: string) {
-  return title
-    .toLowerCase()
-    .trim()
-    .replace(/[\s_]+/g, '-')
-    .replace(/[^a-z0-9-]/g, '')
-    .replace(/-+/g, '-')
 }
 
 const apiQuery = computed(() => ({
@@ -91,49 +84,91 @@ const { data, pending, error } = await useFetch<ProductsResponse>('/api/products
   default: () => ({ page: 1, items: [], hasNext: false, sections: [] })
 })
 
-const { data: categoriesData } = await useFetch<PaginatedCategoryList>('/api/products/categories', {
-  query: { page_size: 200 },
-  default: () => ({ count: 0, next: null, previous: null, results: [] })
-})
-
 const { data: rootCategories } = await useFetch<RootCategory[]>('/api/products/root-categories', {
   default: () => []
 })
 
-const categorySlugMap = computed(() => {
-  const map = new Map<string, string>()
+const categorySlugs = computed(() => {
+  const slugs = new Set<string>()
   for (const root of rootCategories.value ?? []) {
     for (const cat of root.categories ?? []) {
-      if (cat.name && cat.slug) map.set(cat.name, cat.slug)
+      if (cat.slug) slugs.add(cat.slug)
     }
+  }
+  return Array.from(slugs)
+})
+
+const { data: categoryDetails } = await useAsyncData<CategoryDetail[]>(async () => {
+  const slugs = categorySlugs.value
+  if (!slugs.length) return []
+  const results = await Promise.all(slugs.map(async (slug) => {
+    try {
+      return await $fetch<CategoryDetail>(`/api/products/categories/${encodeURIComponent(slug)}`)
+    } catch {
+      return null
+    }
+  }))
+  return results.filter((item): item is CategoryDetail => Boolean(item))
+}, {
+  watch: [categorySlugs],
+  default: () => []
+})
+
+const categoryDetailMap = computed(() => {
+  const map = new Map<string, CategoryDetail>()
+  for (const detail of categoryDetails.value ?? []) {
+    if (detail.slug) map.set(detail.slug, detail)
   }
   return map
 })
 
-const categoryOptions = computed(() =>
-  (categoriesData.value?.results ?? [])
-    .map((item) => {
-      const title = item.title?.trim() ?? ''
-      if (!title) return null
-      const slug = categorySlugMap.value.get(title) ?? slugifyCategoryTitle(title)
-      if (!slug) return null
-      return { label: title, value: slug }
-    })
-    .filter((item): item is { label: string; value: string } => Boolean(item))
-)
+const categorizedSections = computed<ProductSection[]>(() => {
+  const items = data.value?.items ?? []
+  if (!items.length) return []
 
-const selectedCategory = computed({
-  get() {
-    return queryValue(route.query.category) ?? ''
-  },
-  set(value: string) {
-    const nextQuery = {
-      ...route.query,
-      category: value || undefined,
-      page: undefined
+  const bySlug = new Map<string, { items: Product[]; name?: string }>()
+  for (const product of items) {
+    for (const cat of product.categories ?? []) {
+      if (!cat.slug) continue
+      if (!bySlug.has(cat.slug)) {
+        bySlug.set(cat.slug, { items: [], name: cat.name || undefined })
+      }
+      const entry = bySlug.get(cat.slug)!
+      entry.items.push(product)
+      if (!entry.name && cat.name) entry.name = cat.name
     }
-    router.push({ query: nextQuery })
   }
+
+  const sections: ProductSection[] = []
+  const used = new Set<string>()
+
+  for (const root of rootCategories.value ?? []) {
+    for (const cat of root.categories ?? []) {
+      const slug = cat.slug
+      if (!slug) continue
+      const entry = bySlug.get(slug)
+      if (!entry?.items.length) continue
+      const detail = categoryDetailMap.value.get(slug)
+      sections.push({
+        title: detail?.title || cat.name || entry?.name || slug,
+        description: detail?.description || detail?.short_description || undefined,
+        items: entry.items
+      })
+      used.add(slug)
+    }
+  }
+
+  for (const [slug, entry] of bySlug) {
+    if (used.has(slug) || !entry.items.length) continue
+    const detail = categoryDetailMap.value.get(slug)
+    sections.push({
+      title: detail?.title || entry.name || slug,
+      description: detail?.description || detail?.short_description || undefined,
+      items: entry.items
+    })
+  }
+
+  return sections
 })
 
 function productTo(toSlug: string) {
@@ -147,6 +182,11 @@ const sections = computed<ProductSection[]>(() => {
     const ordered = preferredSectionOrder.map(title => map.get(title) ?? { title, items: [] })
     const remainder = fromData.filter(section => !preferredSectionOrder.includes(section.title))
     return [...ordered, ...remainder]
+  }
+
+  const categorized = categorizedSections.value
+  if (categorized.length) {
+    return categorized
   }
 
   const fallback = data.value?.items ?? []
@@ -174,22 +214,6 @@ const sections = computed<ProductSection[]>(() => {
       <h1 class="text-center text-3xl font-black text-zinc-900 sm:text-4xl">
         محصولات صنایع پخت مشهد
       </h1>
-      <div v-if="categoryOptions.length" class="mt-6 flex flex-wrap items-center justify-center gap-3">
-        <label class="text-xs font-semibold text-zinc-600" for="product-category-filter">
-          فیلتر دسته
-        </label>
-        <select
-          id="product-category-filter"
-          v-model="selectedCategory"
-          class="h-10 rounded-full border border-zinc-200 bg-white px-4 text-xs font-semibold text-zinc-700 shadow-sm transition focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200"
-        >
-          <option value="">همه دسته‌ها</option>
-          <option v-for="option in categoryOptions" :key="option.value" :value="option.value">
-            {{ option.label }}
-          </option>
-        </select>
-      </div>
-
       <div v-if="error" class="mt-8 rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
         دریافت محصولات با خطا مواجه شد. لطفاً دوباره تلاش کنید.
       </div>
@@ -215,14 +239,17 @@ const sections = computed<ProductSection[]>(() => {
 
         <div v-else class="space-y-16">
           <section v-for="section in sections" :key="section.title" class="space-y-6">
-            <div class="space-y-4 text-center">
+            <div class="space-y-6">
               <div class="relative flex items-center justify-center">
                 <span class="absolute inset-x-0 top-1/2 h-[3px] -translate-y-1/2 bg-amber-500" />
-                <h2 class="relative rounded-md border border-amber-500 bg-white px-6 py-2 text-lg font-black text-amber-600 shadow-[0_6px_16px_rgba(0,0,0,0.08)] sm:text-xl">
+                <h2 class="relative rounded-md border border-zinc-200 bg-white px-7 py-2 text-lg font-black text-amber-600 shadow-[0_8px_18px_rgba(0,0,0,0.08)] sm:text-xl">
                   {{ section.title }}
                 </h2>
               </div>
-              <p v-if="section.description" class="max-w-3xl text-justify text-sm leading-8 text-zinc-600">
+              <p
+                v-if="section.description"
+                class="mx-auto max-w-5xl text-justify text-sm leading-8 text-zinc-700 [&_a]:font-semibold [&_a]:text-amber-600 [&_a]:hover:text-amber-700 [&_span]:text-amber-600 [&_strong]:text-amber-600"
+              >
                 {{ section.description }}
               </p>
             </div>

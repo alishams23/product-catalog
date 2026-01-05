@@ -7,6 +7,12 @@ type Product = {
   price?: string
   slug: string
   cartHref?: string
+  categories?: Array<{
+    name: string
+    slug: string
+    rootName?: string
+    rootSlug?: string
+  }>
 }
 
 type ProductSection = {
@@ -26,6 +32,11 @@ type ApiCategory = {
   id: number
   name: string
   slug: string
+  root_category?: {
+    id: number
+    name: string
+    slug: string
+  }
 }
 
 type ApiProductListItem = {
@@ -104,7 +115,15 @@ const handler = async (event: H3Event) => {
       if (!url || isVideoUrl(url)) return ''
       return url
     })(),
-    slug: item.slug ?? ''
+    slug: item.slug ?? '',
+    categories: (item.categories ?? [])
+      .map((cat) => ({
+        name: cat.name ?? '',
+        slug: cat.slug ?? '',
+        rootName: cat.root_category?.name ?? '',
+        rootSlug: cat.root_category?.slug ?? ''
+      }))
+      .filter((cat) => cat.name && cat.slug)
   }))
 
   return {
