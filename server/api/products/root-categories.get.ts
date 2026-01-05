@@ -29,9 +29,4 @@ const handler = async () => {
   return await res.json() as RootCategory[]
 }
 
-export default import.meta.dev
-  ? defineEventHandler(handler)
-  : defineCachedEventHandler(handler, {
-      maxAge: 60 * 30,
-      name: 'product-root-categories'
-    })
+export default defineEventHandler(handler)

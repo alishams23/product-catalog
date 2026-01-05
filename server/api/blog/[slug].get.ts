@@ -59,12 +59,4 @@ const handler = async (event: H3Event) => {
   } satisfies BlogPostDetail
 }
 
-export default import.meta.dev
-  ? defineEventHandler(handler)
-  : defineCachedEventHandler(handler, {
-      maxAge: 60 * 60,
-      getKey(event) {
-        const slug = getRouterParam(event, 'slug') ?? ''
-        return `blog-detail:${slug}`
-      }
-    })
+export default defineEventHandler(handler)

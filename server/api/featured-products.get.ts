@@ -14,7 +14,7 @@ function decodeHtmlEntities(input: string): string {
     .replaceAll('&gt;', '>')
 }
 
-export default defineCachedEventHandler(async () => {
+export default defineEventHandler(async () => {
   const res = await fetch('https://mbico.ir/', {
     headers: {
       'user-agent':
@@ -63,7 +63,4 @@ export default defineCachedEventHandler(async () => {
   }
 
   return products
-}, {
-  maxAge: 60 * 30,
-  name: 'mbico-featured-products'
 })

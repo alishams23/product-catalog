@@ -134,21 +134,4 @@ const handler = async (event: H3Event) => {
   } satisfies ProductsResponse
 }
 
-export default import.meta.dev
-  ? defineEventHandler(handler)
-  : defineCachedEventHandler(handler, {
-      maxAge: 60 * 30,
-      getKey(event) {
-        const query = getQuery(event)
-        const rawPage = Array.isArray(query.page) ? query.page[0] : query.page
-        const params = new URLSearchParams()
-        params.set('page', String(rawPage ?? '1'))
-        appendQuery(params, 'page_size', Array.isArray(query.page_size) ? query.page_size[0] : query.page_size)
-        appendQuery(params, 'category', Array.isArray(query.category) ? query.category[0] : query.category)
-        appendQuery(params, 'root_category', Array.isArray(query.root_category) ? query.root_category[0] : query.root_category)
-        appendQuery(params, 'is_featured', Array.isArray(query.is_featured) ? query.is_featured[0] : query.is_featured)
-        appendQuery(params, 'search', Array.isArray(query.search) ? query.search[0] : query.search)
-        appendQuery(params, 'ordering', Array.isArray(query.ordering) ? query.ordering[0] : query.ordering)
-        return `product-list:${params.toString()}`
-      }
-    })
+export default defineEventHandler(handler)

@@ -31,9 +31,4 @@ const handler = async (_event: H3Event) => {
   return await res.json() as BlogListItem[]
 }
 
-export default import.meta.dev
-  ? defineEventHandler(handler)
-  : defineCachedEventHandler(handler, {
-      maxAge: 60 * 30,
-      name: 'blog-list'
-    })
+export default defineEventHandler(handler)

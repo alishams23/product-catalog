@@ -538,6 +538,8 @@ const routeSlug = computed(() => {
 })
 
 const { data: apiData, pending, error } = await useFetch<ApiProductDetail>(() => `/api/products/${encodeURIComponent(routeSlug.value)}/`, {
+  key: () => `product:${routeSlug.value}`,
+  watch: [routeSlug],
   default: () => ({
     slug: routeSlug.value,
     title: routeSlug.value

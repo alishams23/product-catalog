@@ -93,6 +93,17 @@ function slugifyCategoryTitle(title: string) {
     .replace(/-+/g, '-')
 }
 
+function normalizeCategorySlug(title: string, slug?: string) {
+  const trimmedTitle = title.trim()
+  const directSlug = slug?.trim()
+  if (directSlug) return directSlug
+  const mappedSlug = categorySlugMap.value.get(trimmedTitle)
+  if (mappedSlug) return mappedSlug
+  const derivedSlug = slugifyCategoryTitle(trimmedTitle)
+  if (derivedSlug) return derivedSlug
+  return trimmedTitle
+}
+
 function categoryTo(slug: string) {
   return slug ? `/categories/${encodeURIComponent(slug)}` : '/categories'
 }
@@ -106,7 +117,7 @@ const sections = computed<CategorySection[]>(() => {
         .map((cat) => {
           const title = (cat.name ?? '').trim()
           if (!title) return null
-          const slug = cat.slug || categorySlugMap.value.get(title) || slugifyCategoryTitle(title)
+          const slug = normalizeCategorySlug(title, cat.slug)
           return {
             title,
             slug,
@@ -136,9 +147,7 @@ const sections = computed<CategorySection[]>(() => {
     .map((item) => {
       const title = item.title?.trim() ?? ''
       if (!title) return null
-      const slug = item.slug?.trim()
-        || categorySlugMap.value.get(title)
-        || slugifyCategoryTitle(title)
+      const slug = normalizeCategorySlug(title, item.slug)
       return {
         title,
         slug,
@@ -210,12 +219,11 @@ const isPending = computed(() => categoriesPending.value || rootsPending.value)
             </div>
 
             <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-              <component
-                :is="item.slug ? 'NuxtLink' : 'div'"
+              <NuxtLink
                 v-for="item in section.items"
                 :key="`${section.title}-${item.title}`"
                 class="group overflow-hidden rounded-[26px] bg-white shadow-sm ring-1 ring-black/5 transition hover:-translate-y-0.5 hover:shadow-md"
-                :to="item.slug ? categoryTo(item.slug) : undefined"
+                :to="categoryTo(item.slug)"
               >
                 <div class="aspect-[4/3] w-full overflow-hidden bg-zinc-100">
                   <NuxtImg
@@ -234,7 +242,7 @@ const isPending = computed(() => categoriesPending.value || rootsPending.value)
                     {{ item.title }}
                   </p>
                 </div>
-              </component>
+              </NuxtLink>
             </div>
           </section>
         </div>

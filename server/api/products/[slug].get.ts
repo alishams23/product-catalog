@@ -78,12 +78,4 @@ const handler = async (event: H3Event) => {
   return await res.json() as ProductDetail
 }
 
-export default import.meta.dev
-  ? defineEventHandler(handler)
-  : defineCachedEventHandler(handler, {
-      maxAge: 60 * 30,
-      getKey(event) {
-        const slug = getRouterParam(event, 'slug') ?? ''
-        return `product-detail:${slug}`
-      }
-    })
+export default defineEventHandler(handler)

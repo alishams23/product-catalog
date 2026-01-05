@@ -46,15 +46,4 @@ const handler = async (event: H3Event) => {
   return await res.json() as PaginatedCategoryList
 }
 
-export default import.meta.dev
-  ? defineEventHandler(handler)
-  : defineCachedEventHandler(handler, {
-      maxAge: 60 * 30,
-      getKey(event) {
-        const query = getQuery(event)
-        const params = new URLSearchParams()
-        appendQuery(params, 'page', Array.isArray(query.page) ? query.page[0] : query.page)
-        appendQuery(params, 'page_size', Array.isArray(query.page_size) ? query.page_size[0] : query.page_size)
-        return `product-categories:${params.toString()}`
-      }
-    })
+export default defineEventHandler(handler)
