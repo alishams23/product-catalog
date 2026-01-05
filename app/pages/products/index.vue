@@ -21,34 +21,33 @@ type ProductsResponse = {
   sections: ProductSection[]
 }
 
+type CategoryListItem = {
+  title: string
+  image?: string | null
+}
+
+type PaginatedCategoryList = {
+  count: number
+  next: string | null
+  previous: string | null
+  results: CategoryListItem[]
+}
+
+type RootCategory = {
+  id: number
+  name: string
+  slug: string
+  categories: Array<{
+    id: number
+    name: string
+    slug: string
+  }>
+}
+
 useSeoMeta({
   title: 'محصولات | MBICO',
   description: 'لیست محصولات صنایع پخت مشهد'
 })
-
-const banner = {
-  src: 'https://mbico.ir/wp-content/uploads/2024/05/5839357829638526104.webp',
-  alt: 'بنر محصولات صنایع پخت مشهد',
-  href: 'https://mbico.ir/%D8%AF%D8%B3%D8%AA%DA%AF%D8%A7%D9%87-%D9%87%D8%A7%DB%8C-%D9%86%D8%A7%D9%86%D9%88%D8%A7%DB%8C%DB%8C/'
-}
-
-const headerCards = [
-  {
-    src: 'https://mbico.ir/wp-content/uploads/2024/05/Mobile-bread-baking-machines.webp',
-    alt: 'معرفی ماشین آلات پخت سیار نان و غذا',
-    href: 'https://mbico.ir/%D9%85%D8%A7%D8%B4%DB%8C%D9%86-%D8%A2%D9%84%D8%A7%D8%AA-%D9%BE%D8%AE%D8%AA-%D8%B3%DB%8C%D8%A7%D8%B1/'
-  },
-  {
-    src: 'https://mbico.ir/wp-content/uploads/2025/08/bakingOvens.webp',
-    alt: 'انواع فرهای پخت صنعتی',
-    href: 'https://mbico.ir/%D9%81%D8%B1%D9%87%D8%A7%DB%8C-%D9%BE%D8%AE%D8%AA/'
-  },
-  {
-    src: 'https://mbico.ir/wp-content/uploads/2024/05/Baking-equipment.webp',
-    alt: 'تجهیزات پخت نان و شیرینی',
-    href: 'https://mbico.ir/%D8%AA%D8%AC%D9%87%DB%8C%D8%B2%D8%A7%D8%AA-%D9%BE%D8%AE%D8%AA/'
-  }
-]
 
 const preferredSectionOrder = [
   'فرهای پخت',
@@ -60,8 +59,81 @@ const preferredSectionOrder = [
   'تجهیزات جانبی'
 ]
 
+const route = useRoute()
+const router = useRouter()
+
+function queryValue(value: string | string[] | null | undefined) {
+  return Array.isArray(value) ? value[0] ?? undefined : value ?? undefined
+}
+
+function slugifyCategoryTitle(title: string) {
+  return title
+    .toLowerCase()
+    .trim()
+    .replace(/[\s_]+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+    .replace(/-+/g, '-')
+}
+
+const apiQuery = computed(() => ({
+  page: queryValue(route.query.page),
+  page_size: queryValue(route.query.page_size),
+  category: queryValue(route.query.category),
+  root_category: queryValue(route.query.root_category),
+  search: queryValue(route.query.search),
+  ordering: queryValue(route.query.ordering),
+  is_featured: queryValue(route.query.is_featured)
+}))
+
 const { data, pending, error } = await useFetch<ProductsResponse>('/api/products', {
+  query: apiQuery,
+  watch: [apiQuery],
   default: () => ({ page: 1, items: [], hasNext: false, sections: [] })
+})
+
+const { data: categoriesData } = await useFetch<PaginatedCategoryList>('/api/products/categories', {
+  query: { page_size: 200 },
+  default: () => ({ count: 0, next: null, previous: null, results: [] })
+})
+
+const { data: rootCategories } = await useFetch<RootCategory[]>('/api/products/root-categories', {
+  default: () => []
+})
+
+const categorySlugMap = computed(() => {
+  const map = new Map<string, string>()
+  for (const root of rootCategories.value ?? []) {
+    for (const cat of root.categories ?? []) {
+      if (cat.name && cat.slug) map.set(cat.name, cat.slug)
+    }
+  }
+  return map
+})
+
+const categoryOptions = computed(() =>
+  (categoriesData.value?.results ?? [])
+    .map((item) => {
+      const title = item.title?.trim() ?? ''
+      if (!title) return null
+      const slug = categorySlugMap.value.get(title) ?? slugifyCategoryTitle(title)
+      if (!slug) return null
+      return { label: title, value: slug }
+    })
+    .filter((item): item is { label: string; value: string } => Boolean(item))
+)
+
+const selectedCategory = computed({
+  get() {
+    return queryValue(route.query.category) ?? ''
+  },
+  set(value: string) {
+    const nextQuery = {
+      ...route.query,
+      category: value || undefined,
+      page: undefined
+    }
+    router.push({ query: nextQuery })
+  }
 })
 
 function productTo(toSlug: string) {
@@ -88,43 +160,6 @@ const sections = computed<ProductSection[]>(() => {
 
 <template>
   <div class="bg-white">
-    <section class="bg-white pt-6 sm:pt-8">
-      <div class="mx-auto max-w-[1220px] px-4">
-        <div class="overflow-hidden rounded-[32px] shadow-[0_30px_80px_rgba(0,0,0,0.18)] ring-1 ring-black/5 sm:rounded-[56px]">
-          <a :href="banner.href" target="_blank" rel="noopener" class="block">
-            <NuxtImg
-              :src="banner.src"
-              :alt="banner.alt"
-              class="h-full w-full object-cover"
-              sizes="(max-width: 768px) 100vw, 1220px"
-            />
-          </a>
-        </div>
-      </div>
-    </section>
-
-    <section class="bg-white pb-2 pt-6">
-      <div class="mx-auto max-w-[1220px] px-4">
-        <div class="grid gap-4 sm:grid-cols-3">
-          <a
-            v-for="card in headerCards"
-            :key="card.href"
-            :href="card.href"
-            target="_blank"
-            rel="noopener"
-            class="group overflow-hidden rounded-[26px] bg-[#f79a21] shadow-[0_18px_40px_rgba(248,144,20,0.3)]"
-          >
-            <NuxtImg
-              :src="card.src"
-              :alt="card.alt"
-              class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 380px"
-            />
-          </a>
-        </div>
-      </div>
-    </section>
-
     <div class="mx-auto max-w-[1220px] px-4 pt-6">
       <nav class="text-xs uppercase text-zinc-500">
         <NuxtLink to="/" class="hover:text-zinc-700">
@@ -139,6 +174,21 @@ const sections = computed<ProductSection[]>(() => {
       <h1 class="text-center text-3xl font-black text-zinc-900 sm:text-4xl">
         محصولات صنایع پخت مشهد
       </h1>
+      <div v-if="categoryOptions.length" class="mt-6 flex flex-wrap items-center justify-center gap-3">
+        <label class="text-xs font-semibold text-zinc-600" for="product-category-filter">
+          فیلتر دسته
+        </label>
+        <select
+          id="product-category-filter"
+          v-model="selectedCategory"
+          class="h-10 rounded-full border border-zinc-200 bg-white px-4 text-xs font-semibold text-zinc-700 shadow-sm transition focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200"
+        >
+          <option value="">همه دسته‌ها</option>
+          <option v-for="option in categoryOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
 
       <div v-if="error" class="mt-8 rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
         دریافت محصولات با خطا مواجه شد. لطفاً دوباره تلاش کنید.

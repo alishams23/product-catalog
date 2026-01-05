@@ -69,6 +69,31 @@ type ProductDetail = {
   href: string
 }
 
+type CategoryDetail = {
+  id: number
+  title: string
+  slug: string
+  image?: string | null
+  short_description?: string
+  description?: string
+}
+
+type RootCategory = {
+  id: number
+  name: string
+  slug: string
+  categories: Array<{
+    id: number
+    name: string
+    slug: string
+    root_category?: {
+      id: number
+      name: string
+      slug: string
+    }
+  }>
+}
+
 type ApiMedia = {
   media_type?: string
   role?: string
@@ -206,6 +231,22 @@ function normalizeText(input: string): string {
 
 function stripHtml(input: string): string {
   return normalizeText((input || '').replace(/<[^>]*>/g, ' '))
+}
+
+function safeDecodeURIComponent(value: string): string {
+  try {
+    return decodeURIComponent(value)
+  } catch {
+    return value
+  }
+}
+
+function extractCategorySlug(href: string | undefined): string {
+  if (!href) return ''
+  const match = /\/categories\/([^/?#]+)/.exec(href)
+  if (match?.[1]) return safeDecodeURIComponent(match[1]).trim()
+  const fallback = href.split('?')[0]?.split('#')[0]?.split('/').filter(Boolean).pop() ?? ''
+  return safeDecodeURIComponent(fallback).trim()
 }
 
 function sortByOrder<T extends { sort_order?: number }>(items: T[]): T[] {
@@ -430,6 +471,8 @@ function mapApiToProduct(api: ApiProductDetail | null | undefined, fallbackSlug:
   const highlight = normalizeText(api?.highlight ?? api?.highlights ?? '')
   const description = normalizeText(api?.description ?? api?.short_description ?? '')
   const price = api?.price !== undefined ? String(api.price) : ''
+  const category = normalizeText(api?.category ?? '')
+  const categoryHref = normalizeText(api?.categoryHref ?? '')
 
   const heroTitle = normalizeText(api?.hero_title ?? title ?? slug)
   const heroTagline = normalizeText(api?.hero_tagline ?? '')
@@ -449,8 +492,8 @@ function mapApiToProduct(api: ApiProductDetail | null | undefined, fallbackSlug:
     highlight: highlight || undefined,
     highlightHtml: api?.highlight_html || undefined,
     summaryHtml: api?.summary_html || undefined,
-    category: undefined,
-    categoryHref: undefined,
+    category: category || undefined,
+    categoryHref: categoryHref || undefined,
     cartHref: normalizeText(api?.cart_href ?? '') || undefined,
     heroImage: heroImage || undefined,
     heroAlt: heroAlt || undefined,
@@ -487,6 +530,47 @@ const { data: apiData, pending, error } = await useFetch<ApiProductDetail>(() =>
 
 const data = computed<ProductDetail>(() => mapApiToProduct(apiData.value, routeSlug.value))
 const slug = computed(() => data.value?.slug || routeSlug.value)
+
+const { data: rootCategories } = await useFetch<RootCategory[]>('/api/products/root-categories', {
+  default: () => []
+})
+
+const categorySlug = computed(() => extractCategorySlug(data.value?.categoryHref))
+
+const { data: categoryDetail } = await useAsyncData<CategoryDetail | null>(async () => {
+  const slugValue = categorySlug.value
+  if (!slugValue) return null
+  try {
+    return await $fetch<CategoryDetail>(`/api/products/categories/${encodeURIComponent(slugValue)}`)
+  } catch {
+    return null
+  }
+}, {
+  watch: [categorySlug],
+  default: () => null
+})
+
+const rootCategory = computed(() => {
+  const slugValue = categorySlug.value
+  if (!slugValue) return null
+  return rootCategories.value.find((root) =>
+    root.categories?.some((item) => item.slug === slugValue)
+  ) ?? null
+})
+
+const rootCategoryLabel = computed(() => rootCategory.value?.name || '')
+const rootCategoryHref = computed(() =>
+  rootCategory.value?.slug ? `/products?root_category=${encodeURIComponent(rootCategory.value.slug)}` : ''
+)
+const breadcrumbCategoryLabel = computed(() =>
+  categoryDetail.value?.title || data.value?.category || ''
+)
+const breadcrumbCategoryHref = computed(() =>
+  categoryDetail.value?.slug
+    ? `/products?category=${encodeURIComponent(categoryDetail.value.slug)}`
+    : data.value?.categoryHref || ''
+)
+const breadcrumbCategoryIsInternal = computed(() => breadcrumbCategoryHref.value.startsWith('/products?'))
 
 const heroTitle = computed(() => data.value?.heroTitle || data.value?.title || data.value?.slug)
 
@@ -827,15 +911,33 @@ useSeoMeta({
           <NuxtLink to="/products" class="hover:text-zinc-700">
             محصولات
           </NuxtLink>
+          <template v-if="rootCategoryLabel">
+            <span class="mx-2 text-zinc-400">/</span>
+            <NuxtLink
+              v-if="rootCategoryHref"
+              :to="rootCategoryHref"
+              class="text-zinc-700 hover:text-amber-600"
+            >
+              {{ rootCategoryLabel }}
+            </NuxtLink>
+            <span v-else class="text-zinc-700">{{ rootCategoryLabel }}</span>
+          </template>
           <span class="mx-2 text-zinc-400">/</span>
+          <NuxtLink
+            v-if="breadcrumbCategoryLabel && breadcrumbCategoryHref && breadcrumbCategoryIsInternal"
+            :to="breadcrumbCategoryHref"
+            class="text-zinc-700 hover:text-amber-600"
+          >
+            {{ breadcrumbCategoryLabel }}
+          </NuxtLink>
           <a
-            v-if="data?.category && data?.categoryHref"
-            :href="data.categoryHref"
+            v-else-if="breadcrumbCategoryLabel && breadcrumbCategoryHref"
+            :href="breadcrumbCategoryHref"
             class="text-zinc-700 hover:text-amber-600"
             target="_blank"
             rel="noopener"
           >
-            {{ data.category }}
+            {{ breadcrumbCategoryLabel }}
           </a>
           <span v-else class="text-zinc-700">دسته بندی محصول</span>
         </nav>

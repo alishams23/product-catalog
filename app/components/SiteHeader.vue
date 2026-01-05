@@ -2,9 +2,32 @@
 type NavLink = { label: string, href: string }
 type MegaTab = { key: string, label: string, href: string, items: NavLink[] }
 
+type CategoryListItem = {
+  title: string
+  image?: string | null
+}
+
+type PaginatedCategoryList = {
+  count: number
+  next: string | null
+  previous: string | null
+  results: CategoryListItem[]
+}
+
+type RootCategory = {
+  id: number
+  name: string
+  slug: string
+  categories: Array<{
+    id: number
+    name: string
+    slug: string
+  }>
+}
+
 const isMobileOpen = ref(false)
 const isProductsOpen = ref(false)
-const activeProductsTab = ref<'ovens' | 'equipment' | 'mobile'>('ovens')
+const activeProductsTab = ref<string>('')
 const isAtTop = useState<boolean>('header:isAtTop', () => true)
 const baseScrollThresholdPx = 8
 const productScrollThresholdPx = 140
@@ -55,8 +78,91 @@ const productsTabs: MegaTab[] = [
   }
 ]
 
-const activeTab = computed(() => productsTabs.find(t => t.key === activeProductsTab.value) ?? productsTabs[0]!)
 const isInternalLink = (href: string) => href.startsWith('/')
+
+const { data: categoriesData } = await useFetch<PaginatedCategoryList>('/api/products/categories', {
+  query: { page_size: 200 },
+  default: () => ({ count: 0, next: null, previous: null, results: [] })
+})
+
+const { data: rootCategories } = await useFetch<RootCategory[]>('/api/products/root-categories', {
+  default: () => []
+})
+
+const categorySlugMap = computed(() => {
+  const map = new Map<string, string>()
+  for (const root of rootCategories.value ?? []) {
+    for (const cat of root.categories ?? []) {
+      if (cat.name && cat.slug) map.set(cat.name, cat.slug)
+    }
+  }
+  return map
+})
+
+const categoryLinks = computed<NavLink[]>(() =>
+  (categoriesData.value?.results ?? [])
+    .map((item) => {
+      const title = item.title?.trim() ?? ''
+      if (!title) return null
+      const slug = categorySlugMap.value.get(title) ?? slugifyCategoryTitle(title)
+      const href = slug ? `/products?category=${encodeURIComponent(slug)}` : '/products'
+      return { label: title, href }
+    })
+    .filter((item): item is NavLink => Boolean(item))
+)
+
+const rootTabs = computed<MegaTab[]>(() => {
+  const roots = rootCategories.value ?? []
+  if (!roots.length) return []
+  return roots
+    .map((root) => ({
+      key: root.slug || String(root.id),
+      label: root.name || root.slug || 'دسته‌بندی',
+      href: root.slug ? `/products?root_category=${encodeURIComponent(root.slug)}` : '/products',
+      items: (root.categories ?? [])
+        .map((cat) => ({
+          label: cat.name || '',
+          href: cat.slug ? `/products?category=${encodeURIComponent(cat.slug)}` : '/products'
+        }))
+        .filter((item) => item.label)
+    }))
+    .filter((tab) => tab.label)
+})
+
+const menuTabs = computed<MegaTab[]>(() => {
+  if (rootTabs.value.length) return rootTabs.value
+  if (categoryLinks.value.length) {
+    return [{
+      key: 'all',
+      label: 'محصولات',
+      href: '/products',
+      items: categoryLinks.value
+    }]
+  }
+  return productsTabs
+})
+
+const activeTab = computed(() =>
+  menuTabs.value.find(t => t.key === activeProductsTab.value) ?? menuTabs.value[0] ?? productsTabs[0]!
+)
+
+const activeTabItems = computed(() => activeTab.value.items)
+
+watch(menuTabs, (tabs) => {
+  if (!tabs.length) return
+  if (!tabs.some((tab) => tab.key === activeProductsTab.value)) {
+    activeProductsTab.value = tabs[0]!.key
+  }
+}, { immediate: true })
+
+function slugifyCategoryTitle(title: string) {
+  return title
+    .toLowerCase()
+    .trim()
+    .replace(/[\s_]+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+    .replace(/-+/g, '-')
+}
 
 let productsCloseTimer: ReturnType<typeof setTimeout> | null = null
 function openProductsMenu() {
@@ -89,10 +195,13 @@ function closeAll() {
 }
 
 const route = useRoute()
-const showMenu = computed(() => !isAtTop.value)
+const normalizedPath = computed(() => route.path.replace(/\/+$/, '') || '/')
 const isProductPage = computed(() => route.path.includes('/products'))
+const isProductDetailPage = computed(() =>
+  normalizedPath.value.startsWith('/products/') && normalizedPath.value !== '/products'
+)
 const isTransparentHeader = computed(() => isAtTop.value)
-const useLightHeaderText = computed(() => isProductPage.value && isAtTop.value)
+const useLightHeaderText = computed(() => isProductDetailPage.value && isAtTop.value)
 
 function readScrollY() {
   return window.scrollY || window.pageYOffset || 0
@@ -108,7 +217,7 @@ function onScroll() {
   rafId = window.requestAnimationFrame(() => {
     rafId = null
     isAtTop.value = readScrollY() <= activeScrollThreshold()
-    if (!showMenu.value) closeAll()
+    if (!isAtTop.value) closeAll()
   })
 }
 
@@ -143,15 +252,13 @@ watch(() => route.fullPath, async () => {
     leave-to-class="-translate-y-3 opacity-0"
   >
     <header
-      v-if="showMenu"
       :class="[
         'fixed inset-x-0 top-0 z-50 transition-colors duration-300 text-zinc-800',
         isTransparentHeader
-          ? '!border-transparent !bg-transparent !shadow-none !backdrop-blur-0'
+          ? 'border-b border-transparent bg-white/10 shadow-none backdrop-blur'
           : 'border-b border-zinc-200 bg-white/95 shadow-sm backdrop-blur',
         useLightHeaderText ? '!text-white' : ''
       ]"
-      :style="isTransparentHeader ? { backgroundColor: 'transparent', borderColor: 'transparent' } : undefined"
     >
     <div class="mx-auto max-w-6xl px-4">
       <div class="flex items-center gap-3 py-3">
@@ -188,12 +295,12 @@ watch(() => route.fullPath, async () => {
                     </p>
                     <div class="flex flex-col gap-1">
                       <button
-                        v-for="tab in productsTabs"
+                        v-for="tab in menuTabs"
                         :key="tab.key"
                         type="button"
                         class="rounded-xl px-3 py-2 text-right text-sm transition"
                         :class="tab.key === activeProductsTab ? 'bg-amber-100 text-zinc-900' : 'hover:bg-zinc-100 text-zinc-700'"
-                        @click="activeProductsTab = tab.key as any"
+                        @click="activeProductsTab = tab.key"
                       >
                         {{ tab.label }}
                       </button>
@@ -238,7 +345,7 @@ watch(() => route.fullPath, async () => {
                   </div>
 
                     <div class="mt-4 grid grid-cols-2 gap-x-6 gap-y-2">
-                      <template v-for="item in activeTab.items" :key="item.href">
+                      <template v-for="item in activeTabItems" :key="item.href">
                         <NuxtLink
                           v-if="isInternalLink(item.href)"
                           class="rounded-lg px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900"

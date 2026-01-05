@@ -1,0 +1,1093 @@
+openapi: 3.0.3
+info:
+  title: Product Catalog API
+  version: 1.0.0
+  description: API documentation for the Product Catalog service.
+paths:
+  /api/blogs/:
+    get:
+      operationId: blogs_list
+      tags:
+      - blogs
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BlogList'
+          description: ''
+  /api/blogs/{slug}/:
+    get:
+      operationId: blogs_retrieve
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - blogs
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlogDetail'
+          description: ''
+  /api/blogs/root-categories/:
+    get:
+      operationId: blogs_root_categories_list
+      tags:
+      - blogs
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RootCategory'
+          description: ''
+  /api/products/:
+    get:
+      operationId: products_list
+      parameters:
+      - in: query
+        name: category
+        schema:
+          type: string
+      - in: query
+        name: category_id
+        schema:
+          type: integer
+      - in: query
+        name: is_featured
+        schema:
+          type: boolean
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: root_category
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - products
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedProductListList'
+          description: ''
+  /api/products/{slug}/:
+    get:
+      operationId: products_retrieve
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - products
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDetail'
+          description: ''
+  /api/products/categories/:
+    get:
+      operationId: products_categories_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - products
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCategoryListList'
+          description: ''
+  /api/products/categories/{slug}/:
+    get:
+      operationId: products_categories_retrieve
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - products
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryDetail'
+          description: ''
+  /api/products/create/:
+    post:
+      operationId: products_create_create
+      tags:
+      - products
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProductCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProductCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductCreate'
+          description: ''
+  /api/products/root-categories/:
+    get:
+      operationId: products_root_categories_list
+      tags:
+      - products
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RootCategoryList'
+          description: ''
+components:
+  schemas:
+    BlankEnum:
+      enum:
+      - ''
+    BlockTypeEnum:
+      enum:
+      - heading
+      - paragraph
+      - list
+      - image
+      - video
+      type: string
+      description: |-
+        * `heading` - Heading
+        * `paragraph` - Paragraph
+        * `list` - List
+        * `image` - Image
+        * `video` - Video
+    BlogDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 200
+        slug:
+          type: string
+          maxLength: 220
+          pattern: ^[-a-zA-Z0-9_]+$
+        image:
+          type: string
+          readOnly: true
+        excerpt:
+          type: string
+        body:
+          type: string
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+          readOnly: true
+        published_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - categories
+      - id
+      - image
+      - slug
+      - title
+    BlogList:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 200
+        slug:
+          type: string
+          maxLength: 220
+          pattern: ^[-a-zA-Z0-9_]+$
+        image:
+          type: string
+          readOnly: true
+        excerpt:
+          type: string
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+          readOnly: true
+        published_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - categories
+      - id
+      - image
+      - slug
+      - title
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 120
+        slug:
+          type: string
+          maxLength: 140
+          pattern: ^[-a-zA-Z0-9_]+$
+      required:
+      - id
+      - name
+      - slug
+    CategoryDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+        slug:
+          type: string
+          maxLength: 140
+          pattern: ^[-a-zA-Z0-9_]+$
+        image:
+          type: string
+          readOnly: true
+        short_description:
+          type: string
+        description:
+          type: string
+      required:
+      - id
+      - image
+      - slug
+      - title
+    CategoryList:
+      type: object
+      properties:
+        title:
+          type: string
+        image:
+          type: string
+          readOnly: true
+      required:
+      - image
+      - title
+    ContentBlockOutput:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/TypeEnum'
+        text:
+          type: string
+        items:
+          type: array
+          items:
+            type: string
+        src:
+          type: string
+        alt:
+          type: string
+      required:
+      - type
+    FaqItemOutput:
+      type: object
+      properties:
+        question:
+          type: string
+        answer:
+          type: string
+    MediaTypeEnum:
+      enum:
+      - image
+      - video
+      - document
+      type: string
+      description: |-
+        * `image` - Image
+        * `video` - Video
+        * `document` - Document
+    PaginatedCategoryListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoryList'
+    PaginatedProductListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductList'
+    ProductContentBlockCreate:
+      type: object
+      properties:
+        section:
+          allOf:
+          - $ref: '#/components/schemas/SectionEnum'
+          description: |-
+            Which section this block belongs to.
+
+            * `moarefi` - Moarefi
+            * `moshakhasat` - Moshakhasat
+            * `video` - Video
+        block_type:
+          allOf:
+          - $ref: '#/components/schemas/BlockTypeEnum'
+          description: |-
+            Rendered block type.
+
+            * `heading` - Heading
+            * `paragraph` - Paragraph
+            * `list` - List
+            * `image` - Image
+            * `video` - Video
+        title:
+          type: string
+          description: Used by heading blocks.
+          maxLength: 200
+        body:
+          type: string
+          description: Paragraph or raw text content.
+        media:
+          $ref: '#/components/schemas/ProductMediaCreate'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductContentBlockItemCreate'
+        sort_order:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          description: Controls ordering.
+      required:
+      - block_type
+      - section
+    ProductContentBlockItemCreate:
+      type: object
+      properties:
+        label:
+          type: string
+          description: List item label.
+          maxLength: 200
+        value:
+          type: string
+          description: List item value.
+          maxLength: 300
+        sort_order:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          description: Controls ordering.
+    ProductCreate:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Public product name.
+          maxLength: 220
+        slug:
+          type: string
+          description: Used in product detail URL.
+          maxLength: 240
+          pattern: ^[-a-zA-Z0-9_]+$
+        short_description:
+          type: string
+          description: Fallback for summaryHtml.
+        description:
+          type: string
+          description: Full description content.
+        highlights:
+          type: string
+          description: Fallback for highlightHtml.
+        applications:
+          type: string
+          description: Legacy moarefi content.
+        technical_overview:
+          type: string
+          description: Legacy moshakhasat content.
+        model_number:
+          type: string
+          description: Internal model number.
+          maxLength: 120
+        brand:
+          type: string
+          description: Brand/manufacturer.
+          maxLength: 120
+        warranty:
+          type: string
+          description: Warranty label.
+          maxLength: 120
+        datasheet_url:
+          type: string
+          format: uri
+          description: Fallback for specDownloadHref.
+        brochure_url:
+          type: string
+          format: uri
+          description: Fallback for heroCatalogHref.
+        demo_video_url:
+          type: string
+          format: uri
+          description: Fallback for heroVideo.
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+          description: Displayed price.
+        highlight:
+          type: string
+          description: Short highlight text.
+          maxLength: 240
+        highlight_html:
+          type: string
+          description: Rich highlight content.
+        summary_html:
+          type: string
+          description: Rich summary content.
+        hero_title:
+          type: string
+          description: Hero title text.
+          maxLength: 220
+        hero_tagline:
+          type: string
+          description: Hero tagline text.
+          maxLength: 240
+        hero_english:
+          type: string
+          description: Hero English text.
+          maxLength: 240
+        hero_alt:
+          type: string
+          description: Hero image alt text.
+          maxLength: 200
+        hero_video_url:
+          type: string
+          format: uri
+          description: Hero video file.
+        hero_catalog_href:
+          type: string
+          format: uri
+          description: Hero catalog PDF.
+        hero_catalog_label:
+          type: string
+          description: Label for the hero catalog link.
+          maxLength: 200
+        cart_href:
+          type: string
+          format: uri
+          description: Add-to-cart URL.
+          maxLength: 200
+        spec_download_href:
+          type: string
+          format: uri
+          description: Primary spec download file.
+        meta_title:
+          type: string
+          description: SEO title.
+          maxLength: 200
+        meta_description:
+          type: string
+          description: SEO description.
+        is_featured:
+          type: boolean
+          description: Highlights product in lists.
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+        published_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Controls ordering and publish time.
+        categories:
+          type: array
+          items:
+            type: integer
+        media:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductMediaCreate'
+        features:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductFeatureCreate'
+        specifications:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductSpecificationCreate'
+        nav_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductNavItemCreate'
+        content_blocks:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductContentBlockCreate'
+        spec_models:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductSpecModelCreate'
+        faq_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductFaqItemCreate'
+      required:
+      - slug
+      - title
+    ProductDetail:
+      type: object
+      properties:
+        slug:
+          type: string
+        title:
+          type: string
+        image:
+          type: string
+          nullable: true
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        description:
+          type: string
+        highlight:
+          type: string
+        highlightHtml:
+          type: string
+        summaryHtml:
+          type: string
+        category:
+          type: string
+        categoryHref:
+          type: string
+        cartHref:
+          type: string
+        heroImage:
+          type: string
+          nullable: true
+        heroAlt:
+          type: string
+        heroEnglish:
+          type: string
+        heroTitle:
+          type: string
+        heroTagline:
+          type: string
+        heroVideo:
+          type: string
+        heroCatalogHref:
+          type: string
+        heroCatalogLabel:
+          type: string
+        navItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductNavItemOutput'
+        moarefiBlocks:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContentBlockOutput'
+        moshakhasatBlocks:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContentBlockOutput'
+        videoBlocks:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContentBlockOutput'
+        specModels:
+          type: array
+          items:
+            $ref: '#/components/schemas/SpecModelOutput'
+        specDownloadHref:
+          type: string
+        videoGallery:
+          type: array
+          items:
+            type: string
+        faqItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/FaqItemOutput'
+        href:
+          type: string
+      required:
+      - faqItems
+      - href
+      - moarefiBlocks
+      - moshakhasatBlocks
+      - navItems
+      - slug
+      - specModels
+      - title
+      - videoBlocks
+      - videoGallery
+    ProductFaqItemCreate:
+      type: object
+      properties:
+        question:
+          type: string
+          description: FAQ question.
+          maxLength: 240
+        answer_html:
+          type: string
+          description: FAQ answer HTML/text.
+        sort_order:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          description: Controls ordering.
+      required:
+      - question
+    ProductFeatureCreate:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Feature title.
+          maxLength: 200
+        body:
+          type: string
+          description: Feature body text.
+        sort_order:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          description: Controls ordering.
+      required:
+      - title
+    ProductList:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          description: Public product name.
+          maxLength: 220
+        slug:
+          type: string
+          description: Used in product detail URL.
+          maxLength: 240
+          pattern: ^[-a-zA-Z0-9_]+$
+        short_description:
+          type: string
+          description: Fallback for summaryHtml.
+        primary_image:
+          type: string
+          readOnly: true
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+          readOnly: true
+        is_featured:
+          type: boolean
+          description: Highlights product in lists.
+        published_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Controls ordering and publish time.
+      required:
+      - categories
+      - id
+      - primary_image
+      - slug
+      - title
+    ProductMediaCreate:
+      type: object
+      properties:
+        media_type:
+          allOf:
+          - $ref: '#/components/schemas/MediaTypeEnum'
+          description: |-
+            Image, video, or document.
+
+            * `image` - Image
+            * `video` - Video
+            * `document` - Document
+        role:
+          description: |-
+            Hero vs gallery vs document.
+
+            * `hero` - Hero
+            * `gallery` - Gallery
+            * `document` - Document
+          oneOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        title:
+          type: string
+          description: Optional display title.
+          maxLength: 200
+        image:
+          type: string
+          format: uri
+          nullable: true
+          description: Required when media_type=image.
+        file:
+          type: string
+          format: uri
+          nullable: true
+          description: Required when media_type=video/document.
+        alt_text:
+          type: string
+          description: Alt text for image/video.
+          maxLength: 200
+        is_primary:
+          type: boolean
+          description: Used for list thumbnail when media_type=image.
+        sort_order:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          description: Controls ordering.
+    ProductNavItemCreate:
+      type: object
+      properties:
+        anchor_id:
+          type: string
+          description: Anchor id used by navItems.
+          maxLength: 120
+        label:
+          type: string
+          description: Visible nav label.
+          maxLength: 120
+        href:
+          type: string
+          format: uri
+          description: 'Optional anchor href like #intro.'
+          maxLength: 200
+        sort_order:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          description: Controls ordering.
+      required:
+      - label
+    ProductNavItemOutput:
+      type: object
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+    ProductSpecItemCreate:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Spec name.
+          maxLength: 200
+        value:
+          type: string
+          description: Spec value.
+          maxLength: 300
+        unit:
+          type: string
+          description: Optional unit.
+          maxLength: 50
+        sort_order:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          description: Controls ordering.
+      required:
+      - name
+      - value
+    ProductSpecModelCreate:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Spec model title.
+          maxLength: 200
+        spec_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductSpecItemCreate'
+        sort_order:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          description: Controls ordering.
+      required:
+      - title
+    ProductSpecificationCreate:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Specification name.
+          maxLength: 200
+        value:
+          type: string
+          description: Specification value.
+          maxLength: 300
+        unit:
+          type: string
+          description: Optional unit.
+          maxLength: 50
+        sort_order:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          description: Controls ordering.
+      required:
+      - name
+      - value
+    RoleEnum:
+      enum:
+      - hero
+      - gallery
+      - document
+      type: string
+      description: |-
+        * `hero` - Hero
+        * `gallery` - Gallery
+        * `document` - Document
+    RootCategory:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 120
+        slug:
+          type: string
+          maxLength: 140
+          pattern: ^[-a-zA-Z0-9_]+$
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+          readOnly: true
+      required:
+      - categories
+      - id
+      - name
+      - slug
+    RootCategoryList:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 120
+        slug:
+          type: string
+          maxLength: 140
+          pattern: ^[-a-zA-Z0-9_]+$
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+          readOnly: true
+      required:
+      - categories
+      - id
+      - name
+      - slug
+    SectionEnum:
+      enum:
+      - moarefi
+      - moshakhasat
+      - video
+      type: string
+      description: |-
+        * `moarefi` - Moarefi
+        * `moshakhasat` - Moshakhasat
+        * `video` - Video
+    SpecItemOutput:
+      type: object
+      properties:
+        label:
+          type: string
+        value:
+          type: string
+    SpecModelOutput:
+      type: object
+      properties:
+        name:
+          type: string
+        specs:
+          type: array
+          items:
+            $ref: '#/components/schemas/SpecItemOutput'
+      required:
+      - specs
+    StatusEnum:
+      enum:
+      - draft
+      - published
+      - archived
+      type: string
+      description: |-
+        * `draft` - Draft
+        * `published` - Published
+        * `archived` - Archived
+    TypeEnum:
+      enum:
+      - heading
+      - paragraph
+      - list
+      - image
+      - video
+      type: string
+      description: |-
+        * `heading` - heading
+        * `paragraph` - paragraph
+        * `list` - list
+        * `image` - image
+        * `video` - video
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
