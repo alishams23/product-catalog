@@ -2,6 +2,7 @@
 type CategoryListItem = {
   title: string
   image?: string | null
+  slug?: string
 }
 
 type PaginatedCategoryList = {
@@ -75,6 +76,11 @@ const categorySlugMap = computed(() => {
       if (name && cat.slug) map.set(name, cat.slug)
     }
   }
+  for (const item of categoriesData.value?.results ?? []) {
+    const title = item.title?.trim() ?? ''
+    const slug = item.slug?.trim() ?? ''
+    if (title && slug && !map.has(title)) map.set(title, slug)
+  }
   return map
 })
 
@@ -130,7 +136,9 @@ const sections = computed<CategorySection[]>(() => {
     .map((item) => {
       const title = item.title?.trim() ?? ''
       if (!title) return null
-      const slug = categorySlugMap.value.get(title) || slugifyCategoryTitle(title)
+      const slug = item.slug?.trim()
+        || categorySlugMap.value.get(title)
+        || slugifyCategoryTitle(title)
       return {
         title,
         slug,
