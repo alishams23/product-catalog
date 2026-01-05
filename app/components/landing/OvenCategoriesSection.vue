@@ -2,31 +2,31 @@
 const categories = [
   {
     title: 'دستگاه نانوایی',
-    href: '/products',
+    href: '/categories',
     image: 'https://mbico.ir/wp-content/uploads/2024/11/ovens-bakery.webp',
     count: '۹ محصول'
   },
   {
     title: 'دستگاه لواش',
-    href: '/products',
+    href: '/categories',
     image: 'https://mbico.ir/wp-content/uploads/2024/05/lavashovens-247x247.webp',
     count: '۷ محصول'
   },
   {
     title: 'دستگاه بربری',
-    href: '/products',
+    href: '/categories',
     image: 'https://mbico.ir/wp-content/uploads/2024/05/barbari-ovens-247x247.webp',
     count: '۶ محصول'
   },
   {
     title: 'دستگاه تافتون',
-    href: '/products',
+    href: '/categories',
     image: 'https://mbico.ir/wp-content/uploads/2024/05/taftoon-ovens-247x247.webp',
     count: '۶ محصول'
   },
   {
     title: 'دستگاه سنگک',
-    href: '/products',
+    href: '/categories',
     image: 'https://mbico.ir/wp-content/uploads/2024/05/sagakovens-1-247x247.webp',
     count: '۹ محصول'
   }

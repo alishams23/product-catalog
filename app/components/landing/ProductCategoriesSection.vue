@@ -2,17 +2,17 @@
 const categories = [
   {
     title: 'فرهای پخت',
-    href: '/products',
+    href: '/categories',
     image: 'https://mbico.ir/wp-content/uploads/2024/10/Oven-Group.webp'
   },
   {
     title: 'تجهیزات پخت',
-    href: '/products',
+    href: '/categories',
     image: 'https://mbico.ir/wp-content/uploads/2024/10/Equipment-Group.webp'
   },
   {
     title: 'ماشین آلات سیار پخت',
-    href: '/products',
+    href: '/categories',
     image: 'https://mbico.ir/wp-content/uploads/2024/10/Mobile-Group.webp'
   }
 ]

@@ -105,7 +105,7 @@ const categoryLinks = computed<NavLink[]>(() =>
       const title = item.title?.trim() ?? ''
       if (!title) return null
       const slug = categorySlugMap.value.get(title) ?? slugifyCategoryTitle(title)
-      const href = slug ? `/products?category=${encodeURIComponent(slug)}` : '/products'
+      const href = slug ? `/categories/${encodeURIComponent(slug)}` : '/categories'
       return { label: title, href }
     })
     .filter((item): item is NavLink => Boolean(item))
@@ -118,11 +118,11 @@ const rootTabs = computed<MegaTab[]>(() => {
     .map((root) => ({
       key: root.slug || String(root.id),
       label: root.name || root.slug || 'دسته‌بندی',
-      href: root.slug ? `/products?root_category=${encodeURIComponent(root.slug)}` : '/products',
+      href: root.slug ? `/categories?root_category=${encodeURIComponent(root.slug)}` : '/categories',
       items: (root.categories ?? [])
         .map((cat) => ({
           label: cat.name || '',
-          href: cat.slug ? `/products?category=${encodeURIComponent(cat.slug)}` : '/products'
+          href: cat.slug ? `/categories/${encodeURIComponent(cat.slug)}` : '/categories'
         }))
         .filter((item) => item.label)
     }))

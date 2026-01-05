@@ -245,6 +245,22 @@ function extractCategorySlug(href: string | undefined): string {
   if (!href) return ''
   const match = /\/categories\/([^/?#]+)/.exec(href)
   if (match?.[1]) return safeDecodeURIComponent(match[1]).trim()
+  try {
+    const url = href.startsWith('http')
+      ? new URL(href)
+      : new URL(href, 'https://example.com')
+    const param = url.searchParams.get('category') ?? ''
+    if (param) return safeDecodeURIComponent(param).trim()
+  } catch {
+    const queryIndex = href.indexOf('?')
+    if (queryIndex !== -1) {
+      const query = href.slice(queryIndex + 1).split('#')[0]
+      for (const part of query.split('&')) {
+        const [key, value] = part.split('=')
+        if (key === 'category' && value) return safeDecodeURIComponent(value).trim()
+      }
+    }
+  }
   const fallback = href.split('?')[0]?.split('#')[0]?.split('/').filter(Boolean).pop() ?? ''
   return safeDecodeURIComponent(fallback).trim()
 }
@@ -560,17 +576,17 @@ const rootCategory = computed(() => {
 
 const rootCategoryLabel = computed(() => rootCategory.value?.name || '')
 const rootCategoryHref = computed(() =>
-  rootCategory.value?.slug ? `/products?root_category=${encodeURIComponent(rootCategory.value.slug)}` : ''
+  rootCategory.value?.slug ? `/categories?root_category=${encodeURIComponent(rootCategory.value.slug)}` : ''
 )
 const breadcrumbCategoryLabel = computed(() =>
   categoryDetail.value?.title || data.value?.category || ''
 )
 const breadcrumbCategoryHref = computed(() =>
-  categoryDetail.value?.slug
-    ? `/products?category=${encodeURIComponent(categoryDetail.value.slug)}`
+  categoryDetail.value?.slug || categorySlug.value
+    ? `/categories/${encodeURIComponent(categoryDetail.value?.slug || categorySlug.value)}`
     : data.value?.categoryHref || ''
 )
-const breadcrumbCategoryIsInternal = computed(() => breadcrumbCategoryHref.value.startsWith('/products?'))
+const breadcrumbCategoryIsInternal = computed(() => breadcrumbCategoryHref.value.startsWith('/categories'))
 
 const heroTitle = computed(() => data.value?.heroTitle || data.value?.title || data.value?.slug)
 
