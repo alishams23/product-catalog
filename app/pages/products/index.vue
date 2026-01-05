@@ -151,7 +151,7 @@ const categorizedSections = computed<ProductSection[]>(() => {
       const detail = categoryDetailMap.value.get(slug)
       sections.push({
         title: detail?.title || cat.name || entry?.name || slug,
-        description: detail?.description || detail?.short_description || undefined,
+        description: detail?.short_description || detail?.description || undefined,
         items: entry.items
       })
       used.add(slug)
@@ -163,7 +163,7 @@ const categorizedSections = computed<ProductSection[]>(() => {
     const detail = categoryDetailMap.value.get(slug)
     sections.push({
       title: detail?.title || entry.name || slug,
-      description: detail?.description || detail?.short_description || undefined,
+      description: detail?.short_description || detail?.description || undefined,
       items: entry.items
     })
   }

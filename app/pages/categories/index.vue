@@ -177,16 +177,7 @@ const isPending = computed(() => categoriesPending.value || rootsPending.value)
     </div>
 
     <section class="mx-auto max-w-[1220px] px-4 pb-16 pt-6">
-      <div class="text-center">
-        <h1 class="text-3xl font-black text-zinc-900 sm:text-4xl">
-          Product Categories
-        </h1>
-        <p class="mt-3 text-sm text-zinc-600">
-          Browse the product categories and jump into the collection you need.
-        </p>
-      </div>
-
-      <div v-if="hasError" class="mt-8 rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
+      <div v-if="hasError" class="rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
         We could not load the categories right now. Please try again later.
       </div>
 
