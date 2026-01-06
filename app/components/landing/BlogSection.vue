@@ -15,23 +15,20 @@ type BlogListItem = {
   published_at?: string | null
 }
 
-const intro = {
-  title: '???????? ????? ? ??????',
-  text: '?????? ?? ????? ????? ????? ? ????????? ??? ?? ?????. ?? ?? ?????? ??????!',
-  href: '/blog'
-}
+const { t, locale, localePath } = useTranslations()
 
 const { data, pending, error } = await useFetch<BlogListItem[]>('/api/blogs', {
   default: () => []
 })
 
-const dateFormatter = new Intl.DateTimeFormat('fa-IR', { day: '2-digit', month: 'long' })
+const dateLocale = computed(() => (locale.value === 'ru' ? 'ru-RU' : locale.value === 'en' ? 'en-US' : 'fa-IR'))
+const dateFormatter = computed(() => new Intl.DateTimeFormat(dateLocale.value, { day: '2-digit', month: 'long' }))
 
 function formatDateParts(value?: string | null) {
   if (!value) return { day: '', month: '' }
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return { day: '', month: '' }
-  const parts = dateFormatter.formatToParts(date)
+  const parts = dateFormatter.value.formatToParts(date)
   return {
     day: parts.find((part) => part.type === 'day')?.value ?? '',
     month: parts.find((part) => part.type === 'month')?.value ?? ''
@@ -40,7 +37,7 @@ function formatDateParts(value?: string | null) {
 
 function toBlogRoute(slug: string): string {
   const safeSlug = slug ? encodeURIComponent(slug) : ''
-  return safeSlug ? `/blog/${safeSlug}` : '/blog'
+  return safeSlug ? localePath(`/blog/${safeSlug}`) : localePath('/blog')
 }
 
 const posts = computed(() =>
@@ -60,15 +57,15 @@ const posts = computed(() =>
   <section class="py-10">
     <div class="mx-auto max-w-6xl px-4">
       <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <UiSectionHeading :title="intro.title" :subtitle="intro.text" align="right" />
-        <NuxtLink class="inline-flex h-11 items-center justify-center rounded-lg bg-amber-500 px-6 text-sm font-semibold text-white shadow hover:bg-amber-600" :to="intro.href">
-          ????? ??
+        <UiSectionHeading :title="t('home.blogSection.title')" :subtitle="t('home.blogSection.text')" align="right" />
+        <NuxtLink class="inline-flex h-11 items-center justify-center rounded-lg bg-amber-500 px-6 text-sm font-semibold text-white shadow hover:bg-amber-600" :to="localePath('/blog')">
+          {{ t('home.blogSection.button') }}
         </NuxtLink>
       </div>
 
       <div class="mt-6">
         <div v-if="error" class="rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
-          ?????? ?????? ????? ?? ??? ????? ??.
+          {{ t('home.blogSection.error') }}
         </div>
         <div v-else-if="pending" class="grid gap-5 md:grid-cols-2">
           <div v-for="i in 2" :key="i" class="flex flex-col overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-sm sm:flex-row">
@@ -81,7 +78,7 @@ const posts = computed(() =>
           </div>
         </div>
         <div v-else-if="posts.length === 0" class="text-center text-sm text-zinc-600">
-          ????? ???? ????? ???? ?????.
+          {{ t('home.blogSection.empty') }}
         </div>
         <div v-else class="grid gap-5 md:grid-cols-2">
           <NuxtLink

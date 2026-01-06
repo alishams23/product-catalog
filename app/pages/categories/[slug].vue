@@ -51,6 +51,8 @@ type RootCategory = {
   }>
 }
 
+const { t, localePath, isRtl } = useTranslations()
+
 const route = useRoute()
 const routeSlug = computed(() => {
   const param = route.params.slug
@@ -95,19 +97,19 @@ const rootCategory = computed(() => {
 
 const rootCategoryLabel = computed(() => rootCategory.value?.name || '')
 const rootCategoryHref = computed(() =>
-  rootCategory.value?.slug ? `/categories?root_category=${encodeURIComponent(rootCategory.value.slug)}` : ''
+  rootCategory.value?.slug ? localePath(`/categories?root_category=${encodeURIComponent(rootCategory.value.slug)}`) : ''
 )
 const productsIndexHref = computed(() =>
-  routeSlug.value ? `/products?category=${encodeURIComponent(routeSlug.value)}` : '/products'
+  routeSlug.value ? localePath(`/products?category=${encodeURIComponent(routeSlug.value)}`) : localePath('/products')
 )
 
 useSeoMeta(() => ({
-  title: categoryTitle.value ? `${categoryTitle.value} | MBICO` : 'Category | MBICO',
-  description: categoryDescription.value || 'Browse products in this category.'
+  title: categoryTitle.value ? `${categoryTitle.value} | MBICO` : t('seo.categoryDetail.titleFallback'),
+  description: categoryDescription.value || t('seo.categoryDetail.descriptionFallback')
 }))
 
 function productTo(slug: string) {
-  return slug ? `/products/${encodeURIComponent(slug)}` : '/products'
+  return slug ? localePath(`/products/${encodeURIComponent(slug)}`) : localePath('/products')
 }
 </script>
 
@@ -121,18 +123,18 @@ function productTo(slug: string) {
         <div class="mt-8 grid gap-10 lg:grid-cols-12">
           <div class="lg:col-span-7">
             <p class="text-xs font-semibold uppercase tracking-[0.3em] text-amber-300">
-              Category
+              {{ t('categories.detail.label') }}
             </p>
             <h1 class="mt-4 text-3xl font-black tracking-tight sm:text-4xl">
-              {{ categoryTitle || 'Category' }}
+              {{ categoryTitle || t('categories.detail.label') }}
             </h1>
             <div v-if="categoryDescription" class="mt-4">
-              <div class="ql-container ql-snow" dir="rtl">
+              <div class="ql-container ql-snow" :dir="isRtl ? 'rtl' : 'ltr'">
                 <div class="ql-editor" v-html="categoryDescription" />
               </div>
             </div>
             <p v-else class="mt-4 text-sm leading-8 text-white/60">
-              Details for this category will be available soon.
+              {{ t('categories.detail.emptyDescription') }}
             </p>
 
             <div class="mt-6 flex flex-wrap gap-3">
@@ -140,21 +142,21 @@ function productTo(slug: string) {
                 :to="productsIndexHref"
                 class="inline-flex items-center justify-center rounded-full bg-amber-500 px-5 py-2 text-xs font-semibold text-white shadow-[0_12px_26px_rgba(248,170,40,0.35)] transition hover:bg-amber-600"
               >
-                View products
+                {{ t('categories.detail.viewProducts') }}
               </NuxtLink>
               <NuxtLink
-                to="/categories"
+                :to="localePath('/categories')"
                 class="inline-flex items-center justify-center rounded-full border border-white/40 px-5 py-2 text-xs font-semibold text-white/90 transition hover:border-white/70 hover:text-white"
               >
-                All categories
+                {{ t('categories.detail.allCategories') }}
               </NuxtLink>
             </div>
 
             <div v-if="categoryError" class="mt-6 rounded-2xl border border-red-200/30 bg-red-500/10 p-4 text-xs text-red-100">
-              We could not load the category details. Showing the products list instead.
+              {{ t('categories.detail.error') }}
             </div>
             <div v-else-if="categoryPending" class="mt-6 text-xs text-white/50">
-              Loading category details...
+              {{ t('categories.detail.loading') }}
             </div>
           </div>
 
@@ -164,12 +166,12 @@ function productTo(slug: string) {
                 <NuxtImg
                   v-if="categoryImage"
                   :src="categoryImage"
-                  :alt="categoryTitle || 'Category'"
+                  :alt="categoryTitle || t('categories.detail.label')"
                   class="h-full w-full object-cover"
                   sizes="(max-width: 768px) 90vw, 420px"
                 />
                 <div v-else class="flex h-full w-full items-center justify-center text-xs text-white/60">
-                  No image available
+                  {{ t('categories.detail.noImage') }}
                 </div>
               </div>
             </div>
@@ -181,15 +183,15 @@ function productTo(slug: string) {
     <section class="mx-auto max-w-[1220px] px-4 py-12">
       <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
         <h2 class="text-lg font-black text-zinc-900">
-          Products in this category
+          {{ t('categories.detail.productsTitle') }}
         </h2>
         <span v-if="products.length" class="text-xs text-zinc-500">
-          {{ products.length }} items
+          {{ t('categories.detail.productsCount', { count: products.length }) }}
         </span>
       </div>
 
       <div v-if="productsError" class="rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
-        We could not load the products right now. Please try again later.
+        {{ t('categories.detail.productsError') }}
       </div>
 
       <div v-else>
@@ -203,7 +205,7 @@ function productTo(slug: string) {
         </div>
 
         <div v-else-if="products.length === 0" class="text-center text-sm text-zinc-600">
-          There are no products in this category yet.
+          {{ t('categories.detail.productsEmpty') }}
         </div>
 
         <div v-else class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
@@ -223,7 +225,7 @@ function productTo(slug: string) {
                 class="h-full w-full object-contain transition duration-500 group-hover:scale-[1.04]"
               />
               <div v-else class="text-xs text-zinc-500">
-                No image
+                {{ t('categories.list.noImage') }}
               </div>
             </NuxtLink>
 
@@ -232,7 +234,7 @@ function productTo(slug: string) {
                 {{ p.title }}
               </NuxtLink>
               <p class="mt-2 text-sm font-semibold text-white">
-                {{ p.price || 'Price on request' }}
+                {{ p.price || t('categories.detail.priceFallback') }}
               </p>
 
               <NuxtLink
@@ -240,7 +242,7 @@ function productTo(slug: string) {
                 :to="productTo(p.slug)"
                 class="mt-4 inline-flex items-center justify-center rounded-md bg-amber-500 px-4 py-2 text-xs font-semibold text-white shadow-[0_10px_20px_rgba(248,144,20,0.35)] transition hover:bg-amber-600"
               >
-                View details
+                {{ t('categories.detail.viewDetails') }}
               </NuxtLink>
             </div>
           </article>
@@ -263,7 +265,7 @@ function productTo(slug: string) {
   line-height: 2;
   color: rgba(255, 255, 255, 0.8);
   text-align: justify;
-  direction: rtl;
+  direction: inherit;
 }
 
 :deep(.ql-editor > *:first-child) {

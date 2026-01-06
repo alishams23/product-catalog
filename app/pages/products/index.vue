@@ -47,12 +47,14 @@ type CategoryDetail = {
   description?: string
 }
 
+const { t, localePath } = useTranslations()
+
 useSeoMeta({
-  title: 'محصولات | MBICO',
-  description: 'لیست محصولات صنایع پخت مشهد'
+  title: computed(() => t('seo.products.title')),
+  description: computed(() => t('seo.products.description'))
 })
 
-const preferredSectionOrder = [
+const preferredSectionOrderFa = [
   'فرهای پخت',
   'دستگاه های پخت نان',
   'دستگاه های اتوماتیک پخت نان',
@@ -61,6 +63,20 @@ const preferredSectionOrder = [
   'سیستم های خنک کننده',
   'تجهیزات جانبی'
 ]
+
+const preferredSectionOrder = computed(() => ([
+  t('products.sections.ovens'),
+  t('products.sections.breadOvens'),
+  t('products.sections.autoBreadOvens'),
+  t('products.sections.doughPrep'),
+  t('products.sections.doughForming'),
+  t('products.sections.cooling'),
+  t('products.sections.accessories')
+]))
+
+const preferredSectionFallback = computed<ProductSection[]>(() =>
+  preferredSectionOrder.value.map(title => ({ title, items: [] }))
+)
 
 const route = useRoute()
 
@@ -172,15 +188,22 @@ const categorizedSections = computed<ProductSection[]>(() => {
 })
 
 function productTo(toSlug: string) {
-  return `/products/${encodeURIComponent(toSlug)}`
+  return localePath(`/products/${encodeURIComponent(toSlug)}`)
 }
 
 const sections = computed<ProductSection[]>(() => {
   const fromData = data.value?.sections ?? []
   if (fromData.length) {
     const map = new Map(fromData.map(section => [section.title, section]))
-    const ordered = preferredSectionOrder.map(title => map.get(title) ?? { title, items: [] })
-    const remainder = fromData.filter(section => !preferredSectionOrder.includes(section.title))
+    const orderCandidates = [preferredSectionOrderFa, preferredSectionOrder.value]
+    const bestOrder = orderCandidates.reduce((best, candidate) => {
+      const matches = candidate.filter(title => map.has(title)).length
+      if (!best) return { candidate, matches }
+      return matches > best.matches ? { candidate, matches } : best
+    }, null as { candidate: string[]; matches: number } | null)?.candidate ?? preferredSectionOrder.value
+
+    const ordered = bestOrder.map(title => map.get(title) ?? { title, items: [] })
+    const remainder = fromData.filter(section => !bestOrder.includes(section.title))
     return [...ordered, ...remainder]
   }
 
@@ -191,10 +214,10 @@ const sections = computed<ProductSection[]>(() => {
 
   const fallback = data.value?.items ?? []
   if (!fallback.length) {
-    return preferredSectionOrder.map(title => ({ title, items: [] }))
+    return preferredSectionFallback.value
   }
 
-  return [{ title: 'محصولات', items: fallback }]
+  return [{ title: t('products.list.allTitle'), items: fallback }]
 })
 </script>
 
@@ -202,10 +225,10 @@ const sections = computed<ProductSection[]>(() => {
   <div class="bg-white">
     <section class="mx-auto max-w-[1220px] px-4 pb-16 pt-16">
       <h1 class="text-center text-3xl font-black text-zinc-900 sm:text-4xl">
-        محصولات صنایع پخت مشهد
+        {{ t('products.list.title') }}
       </h1>
       <div v-if="error" class="mt-8 rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
-        دریافت محصولات با خطا مواجه شد. لطفاً دوباره تلاش کنید.
+        {{ t('products.list.error') }}
       </div>
 
       <div v-else class="mt-10">
@@ -224,7 +247,7 @@ const sections = computed<ProductSection[]>(() => {
         </div>
 
         <div v-else-if="sections.length === 0" class="mt-10 text-center text-sm text-zinc-600">
-          محصولی برای نمایش وجود ندارد.
+          {{ t('products.list.empty') }}
         </div>
 
         <div v-else class="space-y-16">
@@ -262,7 +285,7 @@ const sections = computed<ProductSection[]>(() => {
                     {{ p.title }}
                   </NuxtLink>
                   <p class="mt-2 text-sm font-semibold text-white">
-                    {{ p.price || 'تماس بگیرید' }}
+                    {{ p.price || t('products.list.priceFallback') }}
                   </p>
 
                   <NuxtLink
@@ -270,7 +293,7 @@ const sections = computed<ProductSection[]>(() => {
                     :to="productTo(p.slug)"
                     class="mt-4 inline-flex items-center justify-center rounded-md bg-amber-500 px-4 py-2 text-xs font-semibold text-white shadow-[0_10px_20px_rgba(248,144,20,0.35)] transition hover:bg-amber-600"
                   >
-                    افزودن به سبد خرید
+                    {{ t('products.list.cta') }}
                   </NuxtLink>
                 </div>
               </article>

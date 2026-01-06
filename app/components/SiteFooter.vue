@@ -2,6 +2,7 @@
 const year = new Date().getFullYear()
 const siteOrigin = useRequestURL().origin
 const siteOriginLabel = siteOrigin.replace('https://', '').replace('http://', '')
+const { t, localePath } = useTranslations()
 
 const socials = [
   { label: 'Instagram', href: 'https://www.instagram.com/modern_bakery_mbico', icon: 'https://mbico.ir/wp-content/uploads/2024/07/instagram-ico-280x280.png' },
@@ -22,7 +23,7 @@ const socials = [
     <section class="relative overflow-hidden">
       <NuxtImg
         src="https://mbico.ir/wp-content/uploads/2024/04/aie-veiw2.jpg"
-        alt="نمای کارخانه صنایع پخت مشهد"
+        :alt="t('footer.heroAlt')"
         class="h-[340px] w-full object-cover sm:h-[420px]"
       />
       <div class="absolute inset-0 bg-black/45" />
@@ -31,7 +32,7 @@ const socials = [
       <div class="absolute inset-0 flex items-center justify-center">
         <div class="mx-auto max-w-6xl px-4 text-center">
           <p class="text-white text-[1.15rem] sm:text-[1.35rem] font-semibold drop-shadow">
-            نان سالم، هوای پاک، ایران سرافراز
+            {{ t('footer.tagline') }}
           </p>
 
           <div class="mt-6 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
@@ -58,35 +59,34 @@ const socials = [
           <div>
             <MbicoLogo class="h-10 w-auto brightness-0 invert" variant="dark" />
             <p class="mt-4 text-sm leading-8 text-zinc-300">
-              شرکت صنایع پخت مشهد با رویکرد توسعه پایدار، در تلاش است با ارائه راهکارهای نوآورانه در صنعت پخت،
-              کیفیت زندگی و بهره‌وری را ارتقا دهد.
+              {{ t('footer.description') }}
             </p>
           </div>
 
           <div>
-            <h3 class="text-sm font-semibold text-white">دسترسی سریع</h3>
+            <h3 class="text-sm font-semibold text-white">{{ t('footer.quickAccess') }}</h3>
             <div class="mt-3 h-px w-16 bg-amber-500" />
             <div class="mt-4 grid gap-2 text-sm">
-              <NuxtLink class="hover:text-amber-400" to="/products">محصولات</NuxtLink>
-              <NuxtLink class="hover:text-amber-400" to="/blog">وبلاگ</NuxtLink>
-              <NuxtLink class="hover:text-amber-400" to="/after-sales">خدمات پس از فروش</NuxtLink>
-              <NuxtLink class="hover:text-amber-400" to="/contact">تماس با ما</NuxtLink>
+              <NuxtLink class="hover:text-amber-400" :to="localePath('/products')">{{ t('footer.links.products') }}</NuxtLink>
+              <NuxtLink class="hover:text-amber-400" :to="localePath('/blog')">{{ t('footer.links.blog') }}</NuxtLink>
+              <NuxtLink class="hover:text-amber-400" :to="localePath('/after-sales')">{{ t('footer.links.afterSales') }}</NuxtLink>
+              <NuxtLink class="hover:text-amber-400" :to="localePath('/contact')">{{ t('footer.links.contact') }}</NuxtLink>
             </div>
           </div>
 
           <div>
-            <h3 class="text-sm font-semibold text-white">ارتباط با ما</h3>
+            <h3 class="text-sm font-semibold text-white">{{ t('footer.contactHeading') }}</h3>
             <div class="mt-3 h-px w-16 bg-amber-500" />
             <div class="mt-4 space-y-3 text-sm text-zinc-300">
-              <p>تلفن: <a class="hover:text-amber-400" href="tel:+985132464090">۰۵۱-۳۲۴۶۴۰۹۰</a></p>
-              <p>وب‌سایت: <NuxtLink class="hover:text-amber-400" to="/">{{ siteOriginLabel }}</NuxtLink></p>
-              <p>ایمیل: <a class="hover:text-amber-400" href="mailto:info@mbico.ir">info@mbico.ir</a></p>
+              <p>{{ t('footer.labels.phone') }}: <a class="hover:text-amber-400" href="tel:+985132464090">{{ t('shared.phoneDisplay') }}</a></p>
+              <p>{{ t('footer.labels.website') }}: <NuxtLink class="hover:text-amber-400" :to="localePath('/')">{{ siteOriginLabel }}</NuxtLink></p>
+              <p>{{ t('footer.labels.email') }}: <a class="hover:text-amber-400" href="mailto:info@mbico.ir">info@mbico.ir</a></p>
             </div>
           </div>
         </div>
 
         <div class="mt-10 border-t border-white/10 pt-6 text-center text-xs text-zinc-400">
-          © {{ year }} صنایع پخت مشهد
+          {{ t('footer.copyright', { year }) }}
         </div>
       </div>
     </section>

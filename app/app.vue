@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const { t, locale, dir } = useTranslations()
+
 useHead({
   meta: [
     { name: 'viewport', content: 'width=device-width, initial-scale=1' }
@@ -7,13 +9,13 @@ useHead({
     { rel: 'icon', href: '/favicon.ico' }
   ],
   htmlAttrs: {
-    lang: 'fa',
-    dir: 'rtl'
+    lang: locale,
+    dir
   }
 })
 
-const title = 'صنایع پخت مشهد | MBICO'
-const description = 'بزرگترین سازنده دستگاه‌های نانوایی، قنادی و ماشین‌آلات پخت'
+const title = computed(() => t('seo.site.title'))
+const description = computed(() => t('seo.site.description'))
 const siteUrl = useRequestURL().origin
 const defaultOgImage = `${siteUrl}/images/Mbico-Hompageww.webp`
 
@@ -27,8 +29,6 @@ useSeoMeta({
   twitterImage: defaultOgImage,
   twitterCard: 'summary_large_image'
 })
-
-useRoute()
 </script>
 
 <template>

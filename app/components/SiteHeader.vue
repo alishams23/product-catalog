@@ -27,60 +27,73 @@ type RootCategory = {
 
 const isMobileOpen = ref(false)
 const isProductsOpen = ref(false)
+const isLanguageOpen = ref(false)
 const activeProductsTab = ref<string>('')
 const isAtTop = useState<boolean>('header:isAtTop', () => true)
 const baseScrollThresholdPx = 8
 const productScrollThresholdPx = 140
+const { t, locale, localePath, switchLocalePath, isRtl } = useTranslations()
 
-const topLinks: NavLink[] = [
-  { label: 'درباره ما', href: '/about' },
-  { label: 'تماس با ما', href: '/contact' },
-  { label: 'وبلاگ', href: '/blog' },
-  { label: 'English', href: 'https://mbico.com' }
-]
+const topLinks = computed<NavLink[]>(() => [
+  { label: t('header.links.about'), href: '/about' },
+  { label: t('header.links.contact'), href: '/contact' },
+  { label: t('header.links.blog'), href: '/blog' }
+])
 
-const mobileLinks: NavLink[] = [
-  { label: 'خانه', href: '/' },
-  { label: 'محصولات', href: '/products' },
-  { label: 'دسته‌بندی‌ها', href: '/categories' },
-  ...topLinks
-]
+const languageOptions = computed<NavLink[]>(() => [
+  { label: t('header.language.fa'), href: switchLocalePath('fa') },
+  { label: t('header.language.en'), href: switchLocalePath('en') },
+  { label: t('header.language.ru'), href: switchLocalePath('ru') }
+])
 
-const productsTabs: MegaTab[] = [
+const mobileLinks = computed<NavLink[]>(() => [
+  { label: t('header.links.home'), href: '/' },
+  { label: t('header.links.products'), href: '/products' },
+  { label: t('header.links.categories'), href: '/categories' },
+  ...topLinks.value
+])
+
+const activeLanguageLabel = computed(() => {
+  if (locale.value === 'fa') return t('header.language.fa')
+  if (locale.value === 'ru') return t('header.language.ru')
+  return t('header.language.en')
+})
+
+const productsTabs = computed<MegaTab[]>(() => [
   {
     key: 'ovens',
-    label: 'فرهای پخت',
+    label: t('header.mega.tabs.ovens.label'),
     href: '/products',
     items: [
-      { label: 'دستگاه‌های نانوایی', href: '/products' },
-      { label: 'فرهای پخت نان حجیم و نیمه‌حجیم', href: '/products' },
-      { label: 'فرهای پخت پیتزا و غذا', href: '/products' },
-      { label: 'دستگاه لواش', href: '/products' },
-      { label: 'دستگاه بربری', href: '/products' },
-      { label: 'دستگاه سنگک', href: '/products' },
-      { label: 'دستگاه تافتون', href: '/products' }
+      { label: t('header.mega.tabs.ovens.items.bakery'), href: '/products' },
+      { label: t('header.mega.tabs.ovens.items.bulk'), href: '/products' },
+      { label: t('header.mega.tabs.ovens.items.pizza'), href: '/products' },
+      { label: t('header.mega.tabs.ovens.items.lavash'), href: '/products' },
+      { label: t('header.mega.tabs.ovens.items.barbari'), href: '/products' },
+      { label: t('header.mega.tabs.ovens.items.sangak'), href: '/products' },
+      { label: t('header.mega.tabs.ovens.items.taftoon'), href: '/products' }
     ]
   },
   {
     key: 'equipment',
-    label: 'تجهیزات پخت',
+    label: t('header.mega.tabs.equipment.label'),
     href: '/products',
     items: [
-      { label: 'مشاهده همه تجهیزات پخت', href: '/products' },
-      { label: 'محصولات', href: '/products' },
-      { label: 'خدمات پس از فروش', href: '/after-sales' }
+      { label: t('header.mega.tabs.equipment.items.viewAll'), href: '/products' },
+      { label: t('header.mega.tabs.equipment.items.products'), href: '/products' },
+      { label: t('header.mega.tabs.equipment.items.afterSales'), href: '/after-sales' }
     ]
   },
   {
     key: 'mobile',
-    label: 'ماشین‌آلات پخت سیار',
+    label: t('header.mega.tabs.mobile.label'),
     href: '/products',
     items: [
-      { label: 'مشاهده همه ماشین‌آلات پخت سیار', href: '/products' },
-      { label: 'محصولات', href: '/products' }
+      { label: t('header.mega.tabs.mobile.items.viewAll'), href: '/products' },
+      { label: t('header.mega.tabs.mobile.items.products'), href: '/products' }
     ]
   }
-]
+])
 
 const isInternalLink = (href: string) => href.startsWith('/')
 
@@ -121,7 +134,7 @@ const rootTabs = computed<MegaTab[]>(() => {
   return roots
     .map((root) => ({
       key: root.slug || String(root.id),
-      label: root.name || root.slug || 'دسته‌بندی',
+      label: root.name || root.slug || t('header.mega.fallbackCategory'),
       href: root.slug ? `/categories?root_category=${encodeURIComponent(root.slug)}` : '/categories',
       items: (root.categories ?? [])
         .map((cat) => ({
@@ -138,16 +151,16 @@ const menuTabs = computed<MegaTab[]>(() => {
   if (categoryLinks.value.length) {
     return [{
       key: 'all',
-      label: 'محصولات',
+      label: t('header.links.products'),
       href: '/products',
       items: categoryLinks.value
     }]
   }
-  return productsTabs
+  return productsTabs.value
 })
 
 const activeTab = computed(() =>
-  menuTabs.value.find(t => t.key === activeProductsTab.value) ?? menuTabs.value[0] ?? productsTabs[0]!
+  menuTabs.value.find(t => t.key === activeProductsTab.value) ?? menuTabs.value[0] ?? productsTabs.value[0]!
 )
 
 const activeTabItems = computed(() => activeTab.value.items)
@@ -196,6 +209,15 @@ function scheduleCloseProductsMenu() {
 function closeAll() {
   isMobileOpen.value = false
   closeProductsMenu()
+  isLanguageOpen.value = false
+}
+
+function selectLanguage() {
+  isLanguageOpen.value = false
+}
+
+function selectLanguageAndClose() {
+  closeAll()
 }
 
 const route = useRoute()
@@ -261,7 +283,7 @@ watch(() => route.fullPath, async () => {
     <div class="mx-auto max-w-6xl px-4">
       <div class="relative flex items-center gap-3 py-3">
         <NuxtLink
-          to="/"
+          :to="localePath('/')"
           class="absolute left-1/2 -translate-x-1/2 flex items-center gap-3 lg:static lg:left-auto lg:translate-x-0"
         >
           <MbicoLogo class="h-9 w-auto" />
@@ -280,24 +302,34 @@ watch(() => route.fullPath, async () => {
               aria-haspopup="menu"
               @click="isProductsOpen ? closeProductsMenu() : openProductsMenu()"
             >
-              محصولات
+              {{ t('header.links.products') }}
               <span class="text-zinc-500">v</span>
             </button>
 
-            <div v-if="isProductsOpen" class="absolute right-0 top-full pt-3" role="menu" @mouseenter="openProductsMenu" @mouseleave="scheduleCloseProductsMenu">
+            <div
+              v-if="isProductsOpen"
+              class="absolute top-full pt-3"
+              :class="isRtl ? 'right-0' : 'left-0'"
+              role="menu"
+              @mouseenter="openProductsMenu"
+              @mouseleave="scheduleCloseProductsMenu"
+            >
               <div class="w-[720px] rounded-2xl border border-zinc-200 bg-white shadow-xl">
                 <div class="grid grid-cols-12 gap-0 overflow-hidden rounded-2xl">
-                  <div class="col-span-4 border-l border-zinc-200 bg-zinc-50 p-4">
-                    <p class="mb-2 text-xs font-semibold text-zinc-500">
-                      دسته‌بندی‌ها
+                  <div class="col-span-4 bg-zinc-50 p-4" :class="isRtl ? 'border-l border-zinc-200' : 'border-r border-zinc-200'">
+                    <p class="mb-2 text-xs font-semibold text-zinc-500" :class="isRtl ? 'text-right' : 'text-left'">
+                      {{ t('header.mega.categoriesLabel') }}
                     </p>
                     <div class="flex flex-col gap-1">
                       <button
                         v-for="tab in menuTabs"
                         :key="tab.key"
                         type="button"
-                        class="rounded-xl px-3 py-2 text-right text-sm transition"
-                        :class="tab.key === activeProductsTab ? 'bg-amber-100 text-zinc-900' : 'hover:bg-zinc-100 text-zinc-700'"
+                        class="rounded-xl px-3 py-2 text-sm transition"
+                        :class="[
+                          isRtl ? 'text-right' : 'text-left',
+                          tab.key === activeProductsTab ? 'bg-amber-100 text-zinc-900' : 'hover:bg-zinc-100 text-zinc-700'
+                        ]"
                         @click="activeProductsTab = tab.key"
                       >
                         {{ tab.label }}
@@ -310,7 +342,7 @@ watch(() => route.fullPath, async () => {
                     <NuxtLink
                       v-if="isInternalLink(activeTab.href)"
                       class="text-sm font-semibold text-zinc-900 hover:text-amber-600"
-                      :to="activeTab.href"
+                      :to="localePath(activeTab.href)"
                     >
                       {{ activeTab.label }}
                     </NuxtLink>
@@ -327,9 +359,9 @@ watch(() => route.fullPath, async () => {
                     <NuxtLink
                       v-if="isInternalLink(activeTab.href)"
                       class="text-xs text-amber-700 hover:text-amber-800"
-                      :to="activeTab.href"
+                      :to="localePath(activeTab.href)"
                     >
-                      مشاهده همه
+                      {{ t('header.mega.viewAll') }}
                     </NuxtLink>
                     <a
                       v-else
@@ -338,7 +370,7 @@ watch(() => route.fullPath, async () => {
                       target="_blank"
                       rel="noopener"
                     >
-                      مشاهده همه
+                      {{ t('header.mega.viewAll') }}
                     </a>
                   </div>
 
@@ -347,7 +379,7 @@ watch(() => route.fullPath, async () => {
                         <NuxtLink
                           v-if="isInternalLink(item.href)"
                           class="rounded-lg px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900"
-                          :to="item.href"
+                          :to="localePath(item.href)"
                         >
                           {{ item.label }}
                         </NuxtLink>
@@ -368,8 +400,50 @@ watch(() => route.fullPath, async () => {
             </div>
           </div>
 
+          <div
+            class="relative"
+            @mouseenter="isLanguageOpen = true"
+            @mouseleave="isLanguageOpen = false"
+          >
+            <button
+              type="button"
+              class="inline-flex items-center gap-1 hover:text-amber-600"
+              :aria-expanded="isLanguageOpen ? 'true' : 'false'"
+              aria-haspopup="menu"
+              @click="isLanguageOpen = !isLanguageOpen"
+            >
+              {{ activeLanguageLabel }}
+              <span class="text-zinc-500">v</span>
+            </button>
+
+            <div v-if="isLanguageOpen" class="absolute top-full pt-3" :class="isRtl ? 'right-0' : 'left-0'" role="menu">
+              <div class="w-44 rounded-xl border border-zinc-200 bg-white p-2 shadow-xl">
+                <template v-for="option in languageOptions" :key="option.label">
+                  <NuxtLink
+                    v-if="isInternalLink(option.href)"
+                    class="block rounded-lg px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900"
+                    :to="option.href"
+                    @click="selectLanguage()"
+                  >
+                    {{ option.label }}
+                  </NuxtLink>
+                  <a
+                    v-else
+                    class="block rounded-lg px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900"
+                    :href="option.href"
+                    target="_blank"
+                    rel="noopener"
+                    @click="selectLanguage()"
+                  >
+                    {{ option.label }}
+                  </a>
+                </template>
+              </div>
+            </div>
+          </div>
+
           <template v-for="l in topLinks" :key="l.href">
-            <NuxtLink v-if="isInternalLink(l.href)" class="hover:text-amber-600" :to="l.href">
+            <NuxtLink v-if="isInternalLink(l.href)" class="hover:text-amber-600" :to="localePath(l.href)">
               {{ l.label }}
             </NuxtLink>
             <a
@@ -384,18 +458,18 @@ watch(() => route.fullPath, async () => {
           </template>
         </nav>
 
-        <div class="ml-auto flex items-center gap-2 lg:mr-auto lg:ml-0">
+        <div class="flex items-center gap-2" :class="isRtl ? 'ml-auto lg:mr-auto lg:ml-0' : 'ml-auto'">
           <a
             class="hidden sm:inline-flex items-center rounded-full bg-amber-500 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-amber-600"
             href="tel:+985132464090"
           >
-            تماس: ۰۵۱-۳۲۴۶۳۰۸۰
+            {{ t('header.cta.phone') }}
           </a>
 
           <button
             type="button"
             class="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-xl border border-zinc-200 text-zinc-900 transition hover:bg-zinc-50"
-            aria-label="باز کردن منو"
+            :aria-label="t('header.aria.openMenu')"
             @click="isMobileOpen = true"
           >
             ☰
@@ -406,7 +480,7 @@ watch(() => route.fullPath, async () => {
 
     <Teleport to="body">
       <div v-if="isMobileOpen" class="lg:hidden fixed inset-0 z-[70]">
-        <button class="absolute inset-0 z-0 bg-black/60" aria-label="بستن منو" @click="isMobileOpen = false" />
+        <button class="absolute inset-0 z-0 bg-black/60" :aria-label="t('header.aria.closeMenu')" @click="isMobileOpen = false" />
 
         <Transition
           enter-active-class="transition duration-300 ease-out"
@@ -420,41 +494,69 @@ watch(() => route.fullPath, async () => {
             <div class="flex h-full flex-col">
               <div class="flex items-center justify-between border-b border-zinc-200 px-4 py-4">
                 <MbicoLogo class="h-8 w-auto" />
-                <button class="h-9 w-9 rounded-xl border border-zinc-200 text-zinc-700" aria-label="بستن" @click="isMobileOpen = false">
+                <button class="h-9 w-9 rounded-xl border border-zinc-200 text-zinc-700" :aria-label="t('header.aria.close')" @click="isMobileOpen = false">
                   x
                 </button>
               </div>
 
               <nav class="flex-1 overflow-y-auto p-4">
                 <div class="space-y-2">
-                  <template v-for="l in mobileLinks" :key="l.href">
-                    <NuxtLink
-                      v-if="isInternalLink(l.href)"
-                      class="flex items-center justify-between rounded-xl px-3 py-3 text-sm font-semibold text-zinc-800 hover:bg-zinc-50"
-                      :to="l.href"
-                      @click="closeAll"
-                    >
-                      <span>{{ l.label }}</span>
-                      <span class="text-zinc-300">></span>
-                    </NuxtLink>
-                    <a
-                      v-else
-                      class="flex items-center justify-between rounded-xl px-3 py-3 text-sm font-semibold text-zinc-800 hover:bg-zinc-50"
-                      :href="l.href"
-                      target="_blank"
-                      rel="noopener"
-                      @click="closeAll"
-                    >
-                      <span>{{ l.label }}</span>
-                      <span class="text-zinc-300">></span>
-                    </a>
-                  </template>
-                </div>
+              <template v-for="l in mobileLinks" :key="l.href">
+                <NuxtLink
+                  v-if="isInternalLink(l.href)"
+                  class="flex items-center justify-between rounded-xl px-3 py-3 text-sm font-semibold text-zinc-800 hover:bg-zinc-50"
+                  :to="localePath(l.href)"
+                  @click="closeAll"
+                >
+                  <span>{{ l.label }}</span>
+                  <span class="text-zinc-300">></span>
+                </NuxtLink>
+                <a
+                  v-else
+                  class="flex items-center justify-between rounded-xl px-3 py-3 text-sm font-semibold text-zinc-800 hover:bg-zinc-50"
+                  :href="l.href"
+                  target="_blank"
+                  rel="noopener"
+                  @click="closeAll"
+                >
+                  <span>{{ l.label }}</span>
+                  <span class="text-zinc-300">></span>
+                </a>
+              </template>
+            </div>
+
+            <div class="mt-6 border-t border-zinc-200 pt-4">
+              <p class="px-3 text-xs font-semibold text-zinc-500">{{ t('header.language.label') }}</p>
+              <div class="mt-2 space-y-1">
+                <template v-for="option in languageOptions" :key="option.label">
+                  <NuxtLink
+                    v-if="isInternalLink(option.href)"
+                    class="flex items-center justify-between rounded-xl px-3 py-2 text-sm font-semibold text-zinc-800 hover:bg-zinc-50"
+                    :to="option.href"
+                    @click="selectLanguageAndClose()"
+                  >
+                    <span>{{ option.label }}</span>
+                    <span class="text-zinc-300">></span>
+                  </NuxtLink>
+                  <a
+                    v-else
+                    class="flex items-center justify-between rounded-xl px-3 py-2 text-sm font-semibold text-zinc-800 hover:bg-zinc-50"
+                    :href="option.href"
+                    target="_blank"
+                    rel="noopener"
+                    @click="selectLanguageAndClose()"
+                  >
+                    <span>{{ option.label }}</span>
+                    <span class="text-zinc-300">></span>
+                  </a>
+                </template>
+              </div>
+            </div>
               </nav>
 
               <div class="border-t border-zinc-200 p-4 text-center">
                 <a class="text-xs font-semibold text-zinc-500" href="tel:+985132464090">
-                  تماس: 051-32464090
+                  {{ t('header.cta.phoneShort') }}
                 </a>
               </div>
             </div>

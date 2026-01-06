@@ -7,39 +7,47 @@ type FeaturedProduct = {
   image: string
 }
 
-const fallbackProducts: FeaturedProduct[] = [
+const { t, localePath } = useTranslations()
+
+const fallbackProducts = computed<FeaturedProduct[]>(() => [
   {
-    title: 'دستگاه نانوایی دوار پرتابل',
+    title: t('home.featured.fallbackProducts.portableRotary'),
     href: 'https://mbico.ir/products/%d8%af%d8%b3%d8%aa%da%af%d8%a7%d9%87-%d9%86%d8%a7%d9%86%d9%88%d8%a7%db%8c%db%8c-%d8%af%d9%88%d8%a7%d8%b1-%d9%be%d8%b1%d8%aa%d8%a7%d8%a8%d9%84/',
     image: 'https://mbico.ir/wp-content/uploads/2023/11/Portable-Oven-280x280.webp'
   },
   {
-    title: 'دستگاه نانوایی سنگک اتومات پرتابل',
+    title: t('home.featured.fallbackProducts.sangakAuto'),
     href: 'https://mbico.ir/products/%d8%af%d8%b3%d8%aa%da%af%d8%a7%d9%87-%d9%86%d8%a7%d9%86%d9%88%d8%a7%db%8c%db%8c-%d8%b3%d9%86%da%af%da%a9-%d8%a7%d8%aa%d9%88%d9%85%d8%a7%d8%aa-%d9%be%d8%b1%d8%aa%d8%a7%d8%a8%d9%84/',
     image: 'https://mbico.ir/wp-content/uploads/2023/11/Sangak-Oven-Auto-280x280.webp'
   },
   {
-    title: 'دستگاه نانوایی تونلی',
+    title: t('home.featured.fallbackProducts.tunnel'),
     href: 'https://mbico.ir/products/%d8%af%d8%b3%d8%aa%da%af%d8%a7%d9%87-%d9%86%d8%a7%d9%86%d9%88%d8%a7%db%8c%db%8c-%d8%aa%d9%88%d9%86%d9%84%db%8c/',
     image: 'https://mbico.ir/wp-content/uploads/2023/11/Tunnel-Oven-280x280.webp'
   },
   {
-    title: 'فر گردان قنادی و فانتزی',
+    title: t('home.featured.fallbackProducts.rotaryPastry'),
     href: 'https://mbico.ir/products/%d9%81%d8%b1-%da%af%d8%b1%d8%af%d8%a7%d9%86-%d9%82%d9%86%d8%a7%d8%af%db%8c/',
     image: 'https://mbico.ir/wp-content/uploads/2023/11/Rotary-Pastry-Oven-280x280.webp'
   }
-]
+])
 
 const { data: remoteProducts } = await useFetch<FeaturedProduct[]>('/api/featured-products', {
   default: () => []
 })
 
-const products = computed(() => remoteProducts.value.length ? remoteProducts.value : fallbackProducts)
+const products = computed(() => remoteProducts.value.length ? remoteProducts.value : fallbackProducts.value)
 const baseLength = computed(() => products.value.length)
 const items = computed(() => {
   const base = products.value
   return base.length ? [...base, ...base, ...base] : []
 })
+const resolvedItems = computed(() =>
+  items.value.map((item) => {
+    const href = toProductRoute(item.href)
+    return { ...item, resolvedHref: href, isInternal: href.startsWith('/') }
+  })
+)
 
 const scroller = ref<HTMLDivElement | null>(null)
 const slideRefs = ref<HTMLElement[]>([])
@@ -69,7 +77,7 @@ function toProductRoute(href: string): string {
     slug = slugEncoded
   }
 
-  return `/products/${encodeURIComponent(slug)}`
+  return localePath(`/products/${encodeURIComponent(slug)}`)
 }
 
 function scrollToIndex(index: number, behavior: ScrollBehavior = 'smooth') {
@@ -182,7 +190,7 @@ onBeforeUnmount(() => {
 <template>
   <section class="py-10">
     <div class="mx-auto max-w-6xl px-4">
-      <UiSectionHeading title="محصولات منتخب؛ راهکاری حرفه‌ای برای نیازهای شما" align="center" />
+      <UiSectionHeading :title="t('home.featured.heading')" align="center" />
 
       <div class="mt-6 rounded-[28px] bg-zinc-100 p-5 sm:p-6">
         <div
@@ -192,13 +200,13 @@ onBeforeUnmount(() => {
           @wheel="onWheel"
         >
           <component
-            v-for="(p, i) in items"
+            v-for="(p, i) in resolvedItems"
             :key="`${p.href}-${i}`"
             :ref="setSlideRef"
             class="group relative flex w-[210px] shrink-0 snap-center flex-col overflow-hidden rounded-[30px] bg-zinc-50 ring-1 ring-black/5 transition duration-300 hover:shadow-md sm:w-[230px]"
             :class="i === activeIndex ? 'z-10 scale-[1.04] shadow-md' : 'scale-[0.97] opacity-90'"
-            :is="toProductRoute(p.href).startsWith('/products/') ? 'NuxtLink' : 'a'"
-            v-bind="toProductRoute(p.href).startsWith('/products/') ? { to: toProductRoute(p.href) } : { href: p.href, target: '_blank', rel: 'noopener' }"
+            :is="p.isInternal ? 'NuxtLink' : 'a'"
+            v-bind="p.isInternal ? { to: p.resolvedHref } : { href: p.resolvedHref, target: '_blank', rel: 'noopener' }"
           >
             <div class="p-4">
               <div class="overflow-hidden rounded-[20%] bg-white">
@@ -217,7 +225,7 @@ onBeforeUnmount(() => {
                   class="inline-flex rounded-full px-4 py-2 text-xs font-semibold text-white transition-colors"
                   :class="i === activeIndex ? 'bg-amber-500' : 'bg-[#e2bf8c] group-hover:bg-amber-500'"
                 >
-                  افزودن به سبد خرید
+                  {{ t('home.featured.cta') }}
                 </span>
               </div>
             </div>

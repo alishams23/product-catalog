@@ -15,22 +15,25 @@ type BlogListItem = {
   published_at?: string | null
 }
 
+const { t, locale, localePath } = useTranslations()
+
 useSeoMeta({
-  title: 'وبلاگ | MBICO',
-  description: 'اخبار و مقالات صنایع پخت مشهد'
+  title: computed(() => t('seo.blog.title')),
+  description: computed(() => t('seo.blog.description'))
 })
 
 const { data, pending, error } = await useFetch<BlogListItem[]>('/api/blogs', {
   default: () => []
 })
 
-const dateFormatter = new Intl.DateTimeFormat('fa-IR', { day: '2-digit', month: 'long' })
+const dateLocale = computed(() => (locale.value === 'ru' ? 'ru-RU' : locale.value === 'en' ? 'en-US' : 'fa-IR'))
+const dateFormatter = computed(() => new Intl.DateTimeFormat(dateLocale.value, { day: '2-digit', month: 'long' }))
 
 function formatDateParts(value?: string | null) {
   if (!value) return { day: '', month: '' }
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return { day: '', month: '' }
-  const parts = dateFormatter.formatToParts(date)
+  const parts = dateFormatter.value.formatToParts(date)
   return {
     day: parts.find((part) => part.type === 'day')?.value ?? '',
     month: parts.find((part) => part.type === 'month')?.value ?? ''
@@ -39,7 +42,7 @@ function formatDateParts(value?: string | null) {
 
 function toBlogRoute(slug: string): string {
   const safeSlug = slug ? encodeURIComponent(slug) : ''
-  return safeSlug ? `/blog/${safeSlug}` : '/blog'
+  return safeSlug ? localePath(`/blog/${safeSlug}`) : localePath('/blog')
 }
 
 const posts = computed(() =>
@@ -71,13 +74,13 @@ const posts = computed(() =>
       <div class="relative mx-auto max-w-6xl px-4 py-[9.6rem] sm:py-[14.4rem] lg:py-[16.8rem]">
         <div class="max-w-xl text-right">
           <p class="text-xs font-semibold tracking-[0.35em] text-zinc-600">
-            وبلاگ تخصصی
+            {{ t('blog.list.heroLabel') }}
           </p>
           <h1 class="mt-4 text-3xl font-black tracking-tight text-zinc-900 sm:text-4xl lg:text-5xl">
-            صنایع پخت مشهد
+            {{ t('blog.list.heroTitle') }}
           </h1>
           <p class="mt-4 text-sm leading-7 text-zinc-700 sm:text-base">
-            تازه ترین خبرها، مقالات و نکات فنی درباره خط تولید، تجهیزات و تکنولوژی های پخت.
+            {{ t('blog.list.heroSubtitle') }}
           </p>
         </div>
       </div>
@@ -86,31 +89,29 @@ const posts = computed(() =>
     <section class="bg-white">
       <div class="mx-auto max-w-4xl px-4 py-12 text-center sm:py-16">
         <h2 class="text-2xl font-black text-zinc-800 sm:text-3xl">
-          ✨ 🌿 به وبلاگ تخصصی صنایع پخت مشهد خوش آمدید!
+          {{ t('blog.list.introTitle') }}
         </h2>
         <p class="mt-5 text-sm leading-8 text-zinc-600 sm:text-base">
-          در اینجا، دنیای نان و شیرینی را از زاویه‌ای متفاوت می‌بینید؛ جایی که علم، هنر و تجربه در هم می‌آمیزند تا
-          طعمی بی‌نظیر خلق شود.
+          {{ t('blog.list.introParagraph1') }}
         </p>
         <p class="mt-4 text-sm leading-8 text-zinc-600 sm:text-base">
-          در این وبلاگ، دانستنی‌های آرد، نانوایی و قنادی، نکات کاربردی پخت و هرآنچه که برای پخت حرفه‌ای نیاز دارید را
-          با شما به اشتراک می‌گذاریم.
+          {{ t('blog.list.introParagraph2') }}
         </p>
         <p class="mt-6 text-base font-semibold text-emerald-700">
-          همراه ما باشید تا با هم، لذت پختی بی‌نقص را تجربه کنیم! 🥖 🎂
+          {{ t('blog.list.introNote') }}
         </p>
       </div>
     </section>
 
-    <section class="bg-[radial-gradient(circle_at_top,#f5f5f5_0%,#e3e3e3_48%,#d2d2d2_100%)] shadow-[inset_0_40px_80px_rgba(0,0,0,0.12)]">
+    <section class="bg-white">
       <div class="mx-auto max-w-6xl px-4 py-10">
         <div class="mb-8 flex items-center gap-4">
           <div class="h-px flex-1 bg-zinc-200" />
-          <h3 class="text-lg font-semibold text-zinc-800">مقالات مرتبط</h3>
+          <h3 class="text-lg font-semibold text-zinc-800">{{ t('blog.list.relatedTitle') }}</h3>
           <div class="h-px flex-1 bg-zinc-200" />
         </div>
         <div v-if="error" class="rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
-          دریافت مطالب وبلاگ با خطا مواجه شد.
+          {{ t('blog.list.error') }}
         </div>
 
         <div v-else>
@@ -127,7 +128,7 @@ const posts = computed(() =>
           </div>
 
           <div v-else-if="posts.length === 0" class="text-center text-sm text-zinc-600">
-            مطلبی برای نمایش وجود ندارد.
+            {{ t('blog.list.empty') }}
           </div>
 
           <div v-else class="grid gap-5 md:grid-cols-2">

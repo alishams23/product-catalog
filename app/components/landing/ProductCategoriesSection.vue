@@ -1,27 +1,29 @@
 <script setup lang="ts">
-const categories = [
+const { t, localePath } = useTranslations()
+
+const categories = computed(() => [
   {
-    title: 'فرهای پخت',
-    href: '/categories',
+    title: t('home.productCategories.items.ovens'),
+    href: localePath('/categories'),
     image: 'https://mbico.ir/wp-content/uploads/2024/10/Oven-Group.webp'
   },
   {
-    title: 'تجهیزات پخت',
-    href: '/categories',
+    title: t('home.productCategories.items.equipment'),
+    href: localePath('/categories'),
     image: 'https://mbico.ir/wp-content/uploads/2024/10/Equipment-Group.webp'
   },
   {
-    title: 'ماشین آلات سیار پخت',
-    href: '/categories',
+    title: t('home.productCategories.items.mobile'),
+    href: localePath('/categories'),
     image: 'https://mbico.ir/wp-content/uploads/2024/10/Mobile-Group.webp'
   }
-]
+])
 </script>
 
 <template>
   <section class="py-10">
     <div class="mx-auto max-w-6xl px-4">
-      <UiSectionHeading title="دسته بندی محصولات" align="center" />
+      <UiSectionHeading :title="t('home.productCategories.heading')" align="center" />
 
       <div class="mt-6 grid gap-5 md:grid-cols-3">
         <NuxtLink

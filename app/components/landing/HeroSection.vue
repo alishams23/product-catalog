@@ -1,8 +1,12 @@
+<script setup lang="ts">
+const { t } = useTranslations()
+</script>
+
 <template>
   <section class="relative h-[58vh] min-h-[360px] max-h-[520px] overflow-hidden bg-zinc-900 sm:h-[640px] sm:max-h-none sm:min-h-0 lg:h-[720px]">
     <img
       src="/images/Mbico-Hompageww.webp"
-      alt="شرکت بین المللی صنایع پخت مشهد"
+      :alt="t('home.hero.alt')"
       class="absolute inset-0 h-full w-full object-cover object-[15%_center] sm:object-center"
       loading="eager"
       decoding="async"

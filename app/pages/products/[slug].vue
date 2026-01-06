@@ -3,6 +3,8 @@ definePageMeta({
   hideHeaderAtTop: true
 })
 
+const { t, localePath } = useTranslations()
+
 type ContentBlock =
   | { type: 'heading'; text: string }
   | { type: 'paragraph'; text: string }
@@ -310,6 +312,19 @@ function isVideoMedia(item: ApiMedia): boolean {
   return Boolean(url) && isVideoUrl(url)
 }
 
+const certificateHeadingKeywords = [
+  ['استاندارد', 'گواهینامه'],
+  ['certificate', 'standard'],
+  ['сертификат', 'стандарт']
+]
+
+function isCertificatesHeading(text: string): boolean {
+  const normalized = text.toLowerCase()
+  return certificateHeadingKeywords.some((keywords) =>
+    keywords.every((keyword) => normalized.includes(keyword))
+  )
+}
+
 function normalizeBlocks(blocks: ContentBlock[] | undefined): ContentBlock[] {
   if (!blocks?.length) return []
   return blocks.flatMap((block) => {
@@ -582,29 +597,29 @@ const rootCategory = computed(() => {
 
 const rootCategoryLabel = computed(() => rootCategory.value?.name || '')
 const rootCategoryHref = computed(() =>
-  rootCategory.value?.slug ? `/categories?root_category=${encodeURIComponent(rootCategory.value.slug)}` : ''
+  rootCategory.value?.slug ? localePath(`/categories?root_category=${encodeURIComponent(rootCategory.value.slug)}`) : ''
 )
 const breadcrumbCategoryLabel = computed(() =>
   categoryDetail.value?.title || data.value?.category || ''
 )
 const breadcrumbCategoryHref = computed(() =>
   categoryDetail.value?.slug || categorySlug.value
-    ? `/categories/${encodeURIComponent(categoryDetail.value?.slug || categorySlug.value)}`
+    ? localePath(`/categories/${encodeURIComponent(categoryDetail.value?.slug || categorySlug.value)}`)
     : data.value?.categoryHref || ''
 )
 const breadcrumbCategoryIsInternal = computed(() => breadcrumbCategoryHref.value.startsWith('/categories'))
 
 const heroTitle = computed(() => data.value?.heroTitle || data.value?.title || data.value?.slug)
 
-const fallbackNav: NavItem[] = [
-  { id: 'moarefi', label: 'معرفی محصول' },
-  { id: 'moshakhasat', label: 'مشخصات فنی' },
-  { id: 'video', label: 'ویدیو محصول' },
-  { id: 'faq', label: 'سوالات متداول' }
-]
+const fallbackNav = computed<NavItem[]>(() => [
+  { id: 'moarefi', label: t('productDetail.fallbackNav.intro') },
+  { id: 'moshakhasat', label: t('productDetail.fallbackNav.specs') },
+  { id: 'video', label: t('productDetail.fallbackNav.video') },
+  { id: 'faq', label: t('productDetail.fallbackNav.faq') }
+])
 
 const navItems = computed(() => {
-  const items = data.value?.navItems?.length ? data.value.navItems : fallbackNav
+  const items = data.value?.navItems?.length ? data.value.navItems : fallbackNav.value
   return items.filter((item) => item.id !== 'price')
 })
 
@@ -797,7 +812,7 @@ const moarefiRenderBlocks = computed<RenderBlock[]>(() => {
   for (let index = 0; index < blocks.length; index += 1) {
     const block = blocks[index]
 
-    if (block.type === 'heading' && block.text.includes('استاندارد') && block.text.includes('گواهینامه')) {
+    if (block.type === 'heading' && isCertificatesHeading(block.text)) {
       const title = block.text
       let cursor = index + 1
       let description: string | undefined
@@ -846,8 +861,8 @@ function sectionLabel(id: string, fallback: string) {
 }
 
 useSeoMeta({
-  title: computed(() => data.value?.title ? `${data.value.title} | MBICO` : 'محصولات | MBICO'),
-  description: computed(() => data.value?.description ?? data.value?.heroTagline ?? 'جزئیات محصول صنایع پخت مشهد')
+  title: computed(() => data.value?.title ? `${data.value.title} | MBICO` : t('seo.productDetail.titleFallback')),
+  description: computed(() => data.value?.description ?? data.value?.heroTagline ?? t('seo.productDetail.descriptionFallback'))
 })
 </script>
 
@@ -892,7 +907,7 @@ useSeoMeta({
               rel="noopener"
               class="inline-flex items-center justify-center rounded-full border border-white/70 px-6 py-2 text-sm font-semibold text-white transition hover:border-white"
             >
-              {{ data.heroCatalogLabel || 'کاتالوگ' }}
+              {{ data.heroCatalogLabel || t('productDetail.catalogLabel') }}
             </a>
           </div>
         </div>
@@ -958,7 +973,7 @@ useSeoMeta({
               {{ data.description }}
             </p>
             <p v-else class="mt-4 text-justify text-sm leading-8 text-zinc-500">
-              جزئیات این محصول به زودی تکمیل می‌شود.
+              {{ t('productDetail.noDetails') }}
             </p>
 
           <div v-if="data?.highlight || data?.highlightHtml" class="mt-8 rounded-[28px] border border-zinc-200 bg-white p-6 shadow-[0_20px_50px_rgba(0,0,0,0.12)]">
@@ -975,11 +990,11 @@ useSeoMeta({
         </div>
 
         <div v-if="pending" class="mt-8 rounded-2xl border border-zinc-200 bg-white p-6 text-sm text-zinc-500">
-          در حال دریافت اطلاعات محصول...
+          {{ t('productDetail.loading') }}
         </div>
 
         <div v-if="error" class="mt-8 rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-700">
-          دریافت اطلاعات محصول با خطا مواجه شد. دوباره تلاش کنید.
+          {{ t('productDetail.error') }}
         </div>
       </div>
     </section>
@@ -989,7 +1004,7 @@ useSeoMeta({
         <div class="flex items-center gap-4">
           <div class="h-[2px] flex-1 bg-amber-500"></div>
           <h2 class="text-lg font-black text-amber-600">
-            {{ sectionLabel('moarefi', 'معرفی محصول') }}
+            {{ sectionLabel('moarefi', t('productDetail.fallbackNav.intro')) }}
           </h2>
           <div class="h-[2px] flex-1 bg-amber-500"></div>
         </div>
@@ -1066,7 +1081,7 @@ useSeoMeta({
         <div class="flex items-center gap-4">
           <div class="h-[2px] flex-1 bg-amber-500"></div>
           <h2 class="text-lg font-black text-amber-600">
-            {{ sectionLabel('moshakhasat', 'مشخصات فنی') }}
+            {{ sectionLabel('moshakhasat', t('productDetail.fallbackNav.specs')) }}
           </h2>
           <div class="h-[2px] flex-1 bg-amber-500"></div>
         </div>
@@ -1102,7 +1117,7 @@ useSeoMeta({
             rel="noopener"
             class="inline-flex items-center justify-center rounded-full bg-amber-500 px-6 py-2 text-sm font-semibold text-white shadow hover:bg-amber-600"
           >
-            دانلود کاتالوگ
+            {{ t('productDetail.downloadCatalog') }}
           </a>
         </div>
 
@@ -1139,7 +1154,7 @@ useSeoMeta({
         <div class="flex items-center gap-4">
           <div class="h-[2px] flex-1 bg-amber-500"></div>
           <h2 class="text-lg font-black text-amber-600">
-            {{ sectionLabel('video', 'ویدیو محصول') }}
+            {{ sectionLabel('video', t('productDetail.fallbackNav.video')) }}
           </h2>
           <div class="h-[2px] flex-1 bg-amber-500"></div>
         </div>
@@ -1167,7 +1182,7 @@ useSeoMeta({
               class="absolute left-2 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-zinc-800 shadow ring-1 ring-black/10 transition hover:bg-white sm:flex"
               :class="videoActiveIndex === 0 ? 'cursor-not-allowed opacity-40' : ''"
               :disabled="videoActiveIndex === 0"
-              aria-label="Previous video"
+              :aria-label="t('productDetail.video.prev')"
               @click="scrollVideoPrev"
             >
               <svg viewBox="0 0 20 20" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
@@ -1179,7 +1194,7 @@ useSeoMeta({
               class="absolute right-2 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-zinc-800 shadow ring-1 ring-black/10 transition hover:bg-white sm:flex"
               :class="videoActiveIndex >= videoSlides.length - 1 ? 'cursor-not-allowed opacity-40' : ''"
               :disabled="videoActiveIndex >= videoSlides.length - 1"
-              aria-label="Next video"
+              :aria-label="t('productDetail.video.next')"
               @click="scrollVideoNext"
             >
               <svg viewBox="0 0 20 20" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
@@ -1223,7 +1238,7 @@ useSeoMeta({
                       v-if="slide.type === 'video'"
                       type="button"
                       class="inline-flex h-16 w-16 items-center justify-center rounded-full border-2 border-white/80 bg-white/10 backdrop-blur transition hover:bg-white/20"
-                      aria-label="Play video"
+                      :aria-label="t('productDetail.video.play')"
                       @click="openVideoModal(slide.src)"
                     >
                       <svg viewBox="0 0 24 24" class="h-7 w-7 text-white" fill="currentColor">
@@ -1245,7 +1260,7 @@ useSeoMeta({
                 type="button"
                 class="h-2 w-8 rounded-full transition"
                 :class="index === videoActiveIndex ? 'bg-amber-500' : 'bg-zinc-300 hover:bg-zinc-400'"
-                :aria-label="`Go to video ${index + 1}`"
+                :aria-label="t('productDetail.video.goTo', { index: index + 1 })"
                 @click="scrollVideoToIndex(index)"
               />
             </div>
@@ -1259,7 +1274,7 @@ useSeoMeta({
         <div class="flex items-center gap-4">
           <div class="h-[2px] flex-1 bg-amber-500"></div>
           <h2 class="text-lg font-black text-amber-600">
-            {{ sectionLabel('faq', 'سوالات متداول') }}
+            {{ sectionLabel('faq', t('productDetail.fallbackNav.faq')) }}
           </h2>
           <div class="h-[2px] flex-1 bg-amber-500"></div>
         </div>
@@ -1288,12 +1303,12 @@ useSeoMeta({
 
     <Teleport to="body">
       <div v-if="videoModalSrc" class="fixed inset-0 z-[70]">
-        <button class="absolute inset-0 bg-black/70" aria-label="Close video" @click="closeVideoModal" />
+        <button class="absolute inset-0 bg-black/70" :aria-label="t('productDetail.video.close')" @click="closeVideoModal" />
         <div class="absolute inset-0 flex items-center justify-center p-4">
           <div class="w-full max-w-5xl overflow-hidden rounded-2xl bg-black shadow-2xl ring-1 ring-white/10">
             <div class="flex items-center justify-between px-4 py-3 text-white/90">
               <span class="text-sm">{{ heroTitle }}</span>
-              <button class="h-9 w-9 rounded-xl bg-white/10 hover:bg-white/15" aria-label="Close video" @click="closeVideoModal">
+              <button class="h-9 w-9 rounded-xl bg-white/10 hover:bg-white/15" :aria-label="t('productDetail.video.close')" @click="closeVideoModal">
                 x
               </button>
             </div>

@@ -1,7 +1,9 @@
 <script setup lang="ts">
+const { t } = useTranslations()
+
 useSeoMeta({
-  title: 'اخبار',
-  description: 'آخرین اخبار'
+  title: computed(() => t('seo.news.title')),
+  description: computed(() => t('seo.news.description'))
 })
 </script>
 
@@ -10,7 +12,7 @@ useSeoMeta({
     <header class="bg-[linear-gradient(180deg,#c8a35f_0%,#b48a47_55%,#9a6c2d_100%)]">
       <div class="mx-auto max-w-6xl px-4 py-10 text-center">
         <h1 class="text-3xl font-black tracking-tight text-zinc-900 [text-shadow:0_2px_0_rgba(0,0,0,0.12)] sm:text-4xl">
-          اخبار
+          {{ t('pages.news.heading') }}
         </h1>
       </div>
     </header>
@@ -21,11 +23,10 @@ useSeoMeta({
       <div class="mx-auto max-w-6xl px-4 py-10">
         <div class="rounded-3xl bg-white p-6 ring-1 ring-black/5">
           <p class="text-sm leading-8 text-zinc-700">
-            بخش اخبار در حال آماده‌سازی است.
+            {{ t('pages.news.body') }}
           </p>
         </div>
       </div>
     </section>
   </div>
 </template>
-

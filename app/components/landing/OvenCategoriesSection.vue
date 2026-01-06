@@ -1,42 +1,44 @@
 <script setup lang="ts">
-const categories = [
+const { t, localePath } = useTranslations()
+
+const categories = computed(() => [
   {
-    title: 'دستگاه نانوایی',
-    href: '/categories',
+    title: t('home.ovenCategories.items.bakery'),
+    href: localePath('/categories'),
     image: 'https://mbico.ir/wp-content/uploads/2024/11/ovens-bakery.webp',
-    count: '۹ محصول'
+    count: t('home.ovenCategories.counts.bakery')
   },
   {
-    title: 'دستگاه لواش',
-    href: '/categories',
+    title: t('home.ovenCategories.items.lavash'),
+    href: localePath('/categories'),
     image: 'https://mbico.ir/wp-content/uploads/2024/05/lavashovens-247x247.webp',
-    count: '۷ محصول'
+    count: t('home.ovenCategories.counts.lavash')
   },
   {
-    title: 'دستگاه بربری',
-    href: '/categories',
+    title: t('home.ovenCategories.items.barbari'),
+    href: localePath('/categories'),
     image: 'https://mbico.ir/wp-content/uploads/2024/05/barbari-ovens-247x247.webp',
-    count: '۶ محصول'
+    count: t('home.ovenCategories.counts.barbari')
   },
   {
-    title: 'دستگاه تافتون',
-    href: '/categories',
+    title: t('home.ovenCategories.items.taftoon'),
+    href: localePath('/categories'),
     image: 'https://mbico.ir/wp-content/uploads/2024/05/taftoon-ovens-247x247.webp',
-    count: '۶ محصول'
+    count: t('home.ovenCategories.counts.taftoon')
   },
   {
-    title: 'دستگاه سنگک',
-    href: '/categories',
+    title: t('home.ovenCategories.items.sangak'),
+    href: localePath('/categories'),
     image: 'https://mbico.ir/wp-content/uploads/2024/05/sagakovens-1-247x247.webp',
-    count: '۹ محصول'
+    count: t('home.ovenCategories.counts.sangak')
   }
-]
+])
 </script>
 
 <template>
   <section class="py-10">
     <div class="mx-auto max-w-6xl px-4">
-      <UiSectionHeading title="دسته بندی فرهای پخت" align="center" />
+      <UiSectionHeading :title="t('home.ovenCategories.heading')" align="center" />
 
       <div class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         <NuxtLink

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const isOpen = ref(false)
 const videoUrl = 'https://mbico.ir/wp-content/uploads/2024/10/Tizer.mp4'
+const { t } = useTranslations()
 </script>
 
 <template>
@@ -9,7 +10,7 @@ const videoUrl = 'https://mbico.ir/wp-content/uploads/2024/10/Tizer.mp4'
       <div class="relative overflow-hidden shadow-sm ring-1 ring-black/5">
         <NuxtImg
           src="https://mbico.ir/wp-content/uploads/2024/10/Mbico-Tizer.webp"
-          alt="تیزر معرفی صنایع پخت مشهد"
+          :alt="t('home.videoTeaser.alt')"
           class="h-[320px] w-full object-cover sm:h-[420px] lg:h-[520px]"
         />
         <div class="absolute inset-0 bg-black/10" />
@@ -17,16 +18,16 @@ const videoUrl = 'https://mbico.ir/wp-content/uploads/2024/10/Tizer.mp4'
         <div class="absolute inset-0 flex items-center justify-center px-4">
           <div class="text-center text-white">
             <p class="text-[1.4rem] sm:text-[2rem] font-extrabold leading-tight drop-shadow">
-              تیزر معرفی صنایع پخت مشهد
+              {{ t('home.videoTeaser.title') }}
             </p>
             <p class="mt-3 text-sm sm:text-base text-white/90">
-              با ما همراه باشید و از نزدیک با محصولات و خدمات آشنا شوید.
+              {{ t('home.videoTeaser.text') }}
             </p>
 
             <button
               type="button"
               class="mt-6 inline-flex h-16 w-16 items-center justify-center rounded-full border-2 border-white/80 bg-white/10 backdrop-blur hover:bg-white/15"
-              aria-label="پخش ویدئو"
+              :aria-label="t('home.videoTeaser.playAria')"
               @click="isOpen = true"
             >
               ▶
@@ -37,12 +38,12 @@ const videoUrl = 'https://mbico.ir/wp-content/uploads/2024/10/Tizer.mp4'
 
       <Teleport to="body">
         <div v-if="isOpen" class="fixed inset-0 z-[60]">
-          <button class="absolute inset-0 bg-black/70" aria-label="بستن" @click="isOpen = false" />
+          <button class="absolute inset-0 bg-black/70" :aria-label="t('home.videoTeaser.closeAria')" @click="isOpen = false" />
           <div class="absolute inset-0 flex items-center justify-center p-4">
             <div class="w-full max-w-6xl overflow-hidden rounded-2xl bg-black shadow-2xl ring-1 ring-white/10">
               <div class="flex items-center justify-between px-4 py-3 text-white/90">
-                <span class="text-sm">پخش ویدئو</span>
-                <button class="h-9 w-9 rounded-xl bg-white/10 hover:bg-white/15" aria-label="بستن" @click="isOpen = false">
+                <span class="text-sm">{{ t('home.videoTeaser.modalTitle') }}</span>
+                <button class="h-9 w-9 rounded-xl bg-white/10 hover:bg-white/15" :aria-label="t('home.videoTeaser.closeAria')" @click="isOpen = false">
                   ×
                 </button>
               </div>

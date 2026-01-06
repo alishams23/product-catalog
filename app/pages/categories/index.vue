@@ -35,9 +35,11 @@ type CategorySection = {
   items: CategoryCard[]
 }
 
+const { t, localePath } = useTranslations()
+
 useSeoMeta({
-  title: 'Categories | MBICO',
-  description: 'Browse product categories.'
+  title: computed(() => t('seo.categories.title')),
+  description: computed(() => t('seo.categories.description'))
 })
 
 const route = useRoute()
@@ -105,7 +107,7 @@ function normalizeCategorySlug(title: string, slug?: string) {
 }
 
 function categoryTo(slug: string) {
-  return slug ? `/categories/${encodeURIComponent(slug)}` : '/categories'
+  return slug ? localePath(`/categories/${encodeURIComponent(slug)}`) : localePath('/categories')
 }
 
 const sections = computed<CategorySection[]>(() => {
@@ -127,7 +129,7 @@ const sections = computed<CategorySection[]>(() => {
         .filter((item): item is CategoryCard => Boolean(item))
       if (!items.length) return null
       return {
-        title: root.name || root.slug || 'Categories',
+        title: root.name || root.slug || t('categories.list.fallbackTitle'),
         slug: root.slug || undefined,
         items
       }
@@ -157,7 +159,7 @@ const sections = computed<CategorySection[]>(() => {
     .filter((item): item is CategoryCard => Boolean(item))
 
   if (!fallbackItems.length) return []
-  return [{ title: 'Categories', items: fallbackItems }]
+  return [{ title: t('categories.list.fallbackTitle'), items: fallbackItems }]
 })
 
 const hasError = computed(() => Boolean(categoriesError.value || rootsError.value))
@@ -168,7 +170,7 @@ const isPending = computed(() => categoriesPending.value || rootsPending.value)
   <div class="bg-white">
     <section class="mx-auto max-w-[1220px] px-4 pb-16 pt-6">
       <div v-if="hasError" class="rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
-        We could not load the categories right now. Please try again later.
+        {{ t('categories.list.error') }}
       </div>
 
       <div v-else class="mt-10">
@@ -187,7 +189,7 @@ const isPending = computed(() => categoriesPending.value || rootsPending.value)
         </div>
 
         <div v-else-if="sections.length === 0" class="mt-10 text-center text-sm text-zinc-600">
-          There are no categories to display yet.
+          {{ t('categories.list.empty') }}
         </div>
 
         <div v-else class="space-y-14">
@@ -215,7 +217,7 @@ const isPending = computed(() => categoriesPending.value || rootsPending.value)
                     sizes="(max-width: 768px) 50vw, 220px"
                   />
                   <div v-else class="flex h-full w-full items-center justify-center text-xs text-zinc-500">
-                    No image
+                    {{ t('categories.list.noImage') }}
                   </div>
                 </div>
                 <div class="px-4 py-3 text-center">

@@ -17,6 +17,8 @@ type BlogCategory = {
   slug: string
 }
 
+const { t, locale, localePath, isRtl } = useTranslations()
+
 const route = useRoute()
 const slug = computed(() => String(route.params.slug ?? ''))
 
@@ -28,32 +30,33 @@ const { data, pending, error } = await useFetch<BlogPostDetail>(() => `/api/blog
   })
 })
 
-const dateFormatter = new Intl.DateTimeFormat('fa-IR', {
+const dateLocale = computed(() => (locale.value === 'ru' ? 'ru-RU' : locale.value === 'en' ? 'en-US' : 'fa-IR'))
+const dateFormatter = computed(() => new Intl.DateTimeFormat(dateLocale.value, {
   day: '2-digit',
   month: 'long',
   year: 'numeric'
-})
+}))
 
 const formattedDate = computed(() => {
   const value = data.value?.publishedAt
   if (!value) return ''
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return ''
-  return dateFormatter.format(date)
+  return dateFormatter.value.format(date)
 })
 
 const metaLine = computed(() => {
   const dateLabel = formattedDate.value
   const author = data.value?.author?.trim()
   if (!dateLabel && !author) return ''
-  const datePart = dateLabel ? `نوشته شده در تاریخ ${dateLabel}` : ''
-  const authorPart = author ? `توسط ${author}` : ''
+  const datePart = dateLabel ? t('blog.detail.metaDate', { date: dateLabel }) : ''
+  const authorPart = author ? t('blog.detail.metaAuthor', { author }) : ''
   return [datePart, authorPart].filter(Boolean).join(' ')
 })
 
 useSeoMeta({
-  title: computed(() => data.value?.title ? `${data.value.title} | وبلاگ` : 'وبلاگ'),
-  description: computed(() => data.value?.description ?? 'مقاله')
+  title: computed(() => data.value?.title ? `${data.value.title} | ${t('seo.blogPost.titleFallback')}` : t('seo.blogPost.titleFallback')),
+  description: computed(() => data.value?.description ?? t('seo.blogPost.descriptionFallback'))
 })
 </script>
 
@@ -62,8 +65,8 @@ useSeoMeta({
     <header class="bg-white">
       <div class="mx-auto max-w-5xl px-4 pb-8 pt-12 text-right">
         <div class="flex items-center justify-end">
-          <NuxtLink to="/blog" class="inline-flex items-center gap-2 text-xs font-semibold text-zinc-500 hover:text-zinc-700">
-            <span>بازگشت</span>
+          <NuxtLink :to="localePath('/blog')" class="inline-flex items-center gap-2 text-xs font-semibold text-zinc-500 hover:text-zinc-700">
+            <span>{{ t('blog.detail.back') }}</span>
             <span class="text-zinc-400">←</span>
           </NuxtLink>
         </div>
@@ -105,7 +108,7 @@ useSeoMeta({
     <section class="bg-white">
       <div class="mx-auto max-w-3xl px-4 py-10">
         <div v-if="error" class="rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
-          دریافت مقاله با خطا مواجه شد.
+          {{ t('blog.detail.error') }}
         </div>
 
         <div v-else>
@@ -113,7 +116,7 @@ useSeoMeta({
             {{ data.description }}
           </p>
           <div v-if="data?.contentHtml" class="mt-8">
-            <div class="ql-container ql-snow" dir="rtl">
+            <div class="ql-container ql-snow" :dir="isRtl ? 'rtl' : 'ltr'">
               <div class="ql-editor" v-html="data.contentHtml" />
             </div>
           </div>
@@ -121,9 +124,9 @@ useSeoMeta({
           <div class="mt-10 flex justify-center">
             <NuxtLink
               class="rounded-full border border-zinc-200 bg-white px-5 py-2 text-sm font-semibold text-zinc-800 shadow-sm hover:bg-zinc-50"
-              to="/blog"
+              :to="localePath('/blog')"
             >
-              بازگشت به وبلاگ
+              {{ t('blog.detail.backToBlog') }}
             </NuxtLink>
           </div>
         </div>
@@ -145,7 +148,7 @@ useSeoMeta({
   line-height: 2;
   color: #3f3f46;
   text-align: justify;
-  direction: rtl;
+  direction: inherit;
 }
 
 :deep(.ql-editor > *:first-child) {
