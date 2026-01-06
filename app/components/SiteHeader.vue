@@ -35,11 +35,15 @@ const productScrollThresholdPx = 140
 const topLinks: NavLink[] = [
   { label: 'درباره ما', href: '/about' },
   { label: 'تماس با ما', href: '/contact' },
-  { label: 'اخبار', href: '/news' },
-  { label: 'خدمات پس از فروش', href: '/after-sales' },
   { label: 'وبلاگ', href: '/blog' },
-  { label: 'آکادمی پخت', href: '/academy' },
   { label: 'English', href: 'https://mbico.com' }
+]
+
+const mobileLinks: NavLink[] = [
+  { label: 'خانه', href: '/' },
+  { label: 'محصولات', href: '/products' },
+  { label: 'دسته‌بندی‌ها', href: '/categories' },
+  ...topLinks
 ]
 
 const productsTabs: MegaTab[] = [
@@ -255,8 +259,11 @@ watch(() => route.fullPath, async () => {
       ]"
     >
     <div class="mx-auto max-w-6xl px-4">
-      <div class="flex items-center gap-3 py-3">
-        <NuxtLink to="/" class="flex items-center gap-3">
+      <div class="relative flex items-center gap-3 py-3">
+        <NuxtLink
+          to="/"
+          class="absolute left-1/2 -translate-x-1/2 flex items-center gap-3 lg:static lg:left-auto lg:translate-x-0"
+        >
           <MbicoLogo class="h-9 w-auto" />
         </NuxtLink>
 
@@ -274,7 +281,7 @@ watch(() => route.fullPath, async () => {
               @click="isProductsOpen ? closeProductsMenu() : openProductsMenu()"
             >
               محصولات
-              <span class="text-zinc-500">▾</span>
+              <span class="text-zinc-500">v</span>
             </button>
 
             <div v-if="isProductsOpen" class="absolute right-0 top-full pt-3" role="menu" @mouseenter="openProductsMenu" @mouseleave="scheduleCloseProductsMenu">
@@ -377,7 +384,7 @@ watch(() => route.fullPath, async () => {
           </template>
         </nav>
 
-        <div class="mr-auto flex items-center gap-2">
+        <div class="ml-auto flex items-center gap-2 lg:mr-auto lg:ml-0">
           <a
             class="hidden sm:inline-flex items-center rounded-full bg-amber-500 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-amber-600"
             href="tel:+985132464090"
@@ -397,45 +404,64 @@ watch(() => route.fullPath, async () => {
       </div>
     </div>
 
-    <div v-if="isMobileOpen" class="lg:hidden fixed inset-0 z-50">
-      <button class="absolute inset-0 bg-black/40" aria-label="بستن منو" @click="isMobileOpen = false" />
+    <Teleport to="body">
+      <div v-if="isMobileOpen" class="lg:hidden fixed inset-0 z-[70]">
+        <button class="absolute inset-0 z-0 bg-black/60" aria-label="بستن منو" @click="isMobileOpen = false" />
 
-      <aside class="absolute right-0 top-0 h-full w-[320px] bg-white shadow-2xl">
-        <div class="flex items-center justify-between border-b border-zinc-200 p-4">
-          <MbicoLogo class="h-8 w-auto" />
-          <button class="h-9 w-9 rounded-xl border border-zinc-200" aria-label="بستن" @click="isMobileOpen = false">
-            ×
-          </button>
-        </div>
+        <Transition
+          enter-active-class="transition duration-300 ease-out"
+          enter-from-class="translate-x-full"
+          enter-to-class="translate-x-0"
+          leave-active-class="transition duration-200 ease-in"
+          leave-from-class="translate-x-0"
+          leave-to-class="translate-x-full"
+        >
+          <aside class="absolute right-0 top-0 z-10 h-full w-[86vw] max-w-[340px] bg-white shadow-2xl">
+            <div class="flex h-full flex-col">
+              <div class="flex items-center justify-between border-b border-zinc-200 px-4 py-4">
+                <MbicoLogo class="h-8 w-auto" />
+                <button class="h-9 w-9 rounded-xl border border-zinc-200 text-zinc-700" aria-label="بستن" @click="isMobileOpen = false">
+                  x
+                </button>
+              </div>
 
-        <div class="p-4">
-          <NuxtLink class="block rounded-xl bg-amber-500 px-4 py-3 text-center text-sm font-semibold text-white" to="/products">
-            مشاهده محصولات
-          </NuxtLink>
+              <nav class="flex-1 overflow-y-auto p-4">
+                <div class="space-y-2">
+                  <template v-for="l in mobileLinks" :key="l.href">
+                    <NuxtLink
+                      v-if="isInternalLink(l.href)"
+                      class="flex items-center justify-between rounded-xl px-3 py-3 text-sm font-semibold text-zinc-800 hover:bg-zinc-50"
+                      :to="l.href"
+                      @click="closeAll"
+                    >
+                      <span>{{ l.label }}</span>
+                      <span class="text-zinc-300">></span>
+                    </NuxtLink>
+                    <a
+                      v-else
+                      class="flex items-center justify-between rounded-xl px-3 py-3 text-sm font-semibold text-zinc-800 hover:bg-zinc-50"
+                      :href="l.href"
+                      target="_blank"
+                      rel="noopener"
+                      @click="closeAll"
+                    >
+                      <span>{{ l.label }}</span>
+                      <span class="text-zinc-300">></span>
+                    </a>
+                  </template>
+                </div>
+              </nav>
 
-          <div class="mt-4 space-y-1">
-            <template v-for="l in topLinks" :key="l.href">
-              <NuxtLink
-                v-if="isInternalLink(l.href)"
-                class="block rounded-xl px-3 py-3 text-sm text-zinc-800 hover:bg-zinc-50"
-                :to="l.href"
-              >
-                {{ l.label }}
-              </NuxtLink>
-              <a
-                v-else
-                class="block rounded-xl px-3 py-3 text-sm text-zinc-800 hover:bg-zinc-50"
-                :href="l.href"
-                target="_blank"
-                rel="noopener"
-              >
-                {{ l.label }}
-              </a>
-            </template>
-          </div>
-        </div>
-      </aside>
-    </div>
+              <div class="border-t border-zinc-200 p-4 text-center">
+                <a class="text-xs font-semibold text-zinc-500" href="tel:+985132464090">
+                  تماس: 051-32464090
+                </a>
+              </div>
+            </div>
+          </aside>
+        </Transition>
+      </div>
+    </Teleport>
     </header>
   </Transition>
 </template>

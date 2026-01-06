@@ -166,16 +166,6 @@ const isPending = computed(() => categoriesPending.value || rootsPending.value)
 
 <template>
   <div class="bg-white">
-    <div class="mx-auto max-w-[1220px] px-4 pt-6">
-      <nav class="text-xs uppercase text-zinc-500">
-        <NuxtLink to="/" class="hover:text-zinc-700">
-          Home
-        </NuxtLink>
-        <span class="mx-2 text-zinc-400">/</span>
-        <span class="text-zinc-700">Categories</span>
-      </nav>
-    </div>
-
     <section class="mx-auto max-w-[1220px] px-4 pb-16 pt-6">
       <div v-if="hasError" class="rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
         We could not load the categories right now. Please try again later.

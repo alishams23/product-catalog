@@ -200,16 +200,6 @@ const sections = computed<ProductSection[]>(() => {
 
 <template>
   <div class="bg-white">
-    <div class="mx-auto max-w-[1220px] px-4 pt-6">
-      <nav class="text-xs uppercase text-zinc-500">
-        <NuxtLink to="/" class="hover:text-zinc-700">
-          خانه
-        </NuxtLink>
-        <span class="mx-2 text-zinc-400">/</span>
-        <span class="text-zinc-700">محصولات</span>
-      </nav>
-    </div>
-
     <section class="mx-auto max-w-[1220px] px-4 pb-16 pt-16">
       <h1 class="text-center text-3xl font-black text-zinc-900 sm:text-4xl">
         محصولات صنایع پخت مشهد

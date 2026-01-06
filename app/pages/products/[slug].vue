@@ -925,45 +925,6 @@ useSeoMeta({
 
     <section class="relative bg-white">
       <div class="relative mx-auto max-w-[1220px] px-4 pb-12 pt-12">
-        <nav class="text-xs uppercase text-zinc-500">
-          <NuxtLink to="/" class="hover:text-zinc-700">
-            خانه
-          </NuxtLink>
-          <span class="mx-2 text-zinc-400">/</span>
-          <NuxtLink to="/products" class="hover:text-zinc-700">
-            محصولات
-          </NuxtLink>
-          <template v-if="rootCategoryLabel">
-            <span class="mx-2 text-zinc-400">/</span>
-            <NuxtLink
-              v-if="rootCategoryHref"
-              :to="rootCategoryHref"
-              class="text-zinc-700 hover:text-amber-600"
-            >
-              {{ rootCategoryLabel }}
-            </NuxtLink>
-            <span v-else class="text-zinc-700">{{ rootCategoryLabel }}</span>
-          </template>
-          <span class="mx-2 text-zinc-400">/</span>
-          <NuxtLink
-            v-if="breadcrumbCategoryLabel && breadcrumbCategoryHref && breadcrumbCategoryIsInternal"
-            :to="breadcrumbCategoryHref"
-            class="text-zinc-700 hover:text-amber-600"
-          >
-            {{ breadcrumbCategoryLabel }}
-          </NuxtLink>
-          <a
-            v-else-if="breadcrumbCategoryLabel && breadcrumbCategoryHref"
-            :href="breadcrumbCategoryHref"
-            class="text-zinc-700 hover:text-amber-600"
-            target="_blank"
-            rel="noopener"
-          >
-            {{ breadcrumbCategoryLabel }}
-          </a>
-          <span v-else class="text-zinc-700">دسته بندی محصول</span>
-        </nav>
-
         <div class="mt-8 grid gap-10 lg:grid-cols-12">
           <div class="order-2 flex justify-center lg:order-1 lg:col-span-6">
             <div v-if="data?.image" class="w-full max-w-xl">

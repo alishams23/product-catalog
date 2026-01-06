@@ -69,7 +69,6 @@ const socials = [
             <div class="mt-4 grid gap-2 text-sm">
               <NuxtLink class="hover:text-amber-400" to="/products">محصولات</NuxtLink>
               <NuxtLink class="hover:text-amber-400" to="/blog">وبلاگ</NuxtLink>
-              <NuxtLink class="hover:text-amber-400" to="/news">اخبار</NuxtLink>
               <NuxtLink class="hover:text-amber-400" to="/after-sales">خدمات پس از فروش</NuxtLink>
               <NuxtLink class="hover:text-amber-400" to="/contact">تماس با ما</NuxtLink>
             </div>

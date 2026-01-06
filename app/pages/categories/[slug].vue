@@ -118,31 +118,6 @@ function productTo(slug: string) {
       <div class="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.06)_0%,rgba(255,255,255,0)_45%)]" />
 
       <div class="relative mx-auto max-w-[1220px] px-4 py-12 sm:py-16">
-        <nav class="text-xs uppercase text-white/60">
-          <NuxtLink to="/" class="hover:text-white">
-            Home
-          </NuxtLink>
-          <span class="mx-2 text-white/40">/</span>
-          <NuxtLink to="/categories" class="hover:text-white">
-            Categories
-          </NuxtLink>
-          <template v-if="rootCategoryLabel">
-            <span class="mx-2 text-white/40">/</span>
-            <NuxtLink
-              v-if="rootCategoryHref"
-              :to="rootCategoryHref"
-              class="hover:text-white"
-            >
-              {{ rootCategoryLabel }}
-            </NuxtLink>
-            <span v-else class="text-white/70">{{ rootCategoryLabel }}</span>
-          </template>
-          <span class="mx-2 text-white/40">/</span>
-          <span class="text-white/90">
-            {{ categoryTitle || 'Category' }}
-          </span>
-        </nav>
-
         <div class="mt-8 grid gap-10 lg:grid-cols-12">
           <div class="lg:col-span-7">
             <p class="text-xs font-semibold uppercase tracking-[0.3em] text-amber-300">
