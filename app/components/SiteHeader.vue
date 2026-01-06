@@ -400,6 +400,21 @@ watch(() => route.fullPath, async () => {
             </div>
           </div>
 
+          <template v-for="l in topLinks" :key="l.href">
+            <NuxtLink v-if="isInternalLink(l.href)" class="hover:text-amber-600" :to="localePath(l.href)">
+              {{ l.label }}
+            </NuxtLink>
+            <a
+              v-else
+              class="hover:text-amber-600"
+              :href="l.href"
+              target="_blank"
+              rel="noopener"
+            >
+              {{ l.label }}
+            </a>
+          </template>
+
           <div
             class="relative"
             @mouseenter="isLanguageOpen = true"
@@ -441,21 +456,6 @@ watch(() => route.fullPath, async () => {
               </div>
             </div>
           </div>
-
-          <template v-for="l in topLinks" :key="l.href">
-            <NuxtLink v-if="isInternalLink(l.href)" class="hover:text-amber-600" :to="localePath(l.href)">
-              {{ l.label }}
-            </NuxtLink>
-            <a
-              v-else
-              class="hover:text-amber-600"
-              :href="l.href"
-              target="_blank"
-              rel="noopener"
-            >
-              {{ l.label }}
-            </a>
-          </template>
         </nav>
 
         <div class="flex items-center gap-2" :class="isRtl ? 'ml-auto lg:mr-auto lg:ml-0' : 'ml-auto'">
