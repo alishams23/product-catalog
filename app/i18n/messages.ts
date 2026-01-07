@@ -388,6 +388,10 @@ export const messages: Messages = {
           subject: 'موضوع',
           message: 'متن پیام',
           submit: 'ارسال ایمیل',
+          submitting: 'در حال ارسال...',
+          success: 'پیام شما با موفقیت ارسال شد.',
+          error: 'ارسال پیام ناموفق بود. دوباره تلاش کنید.',
+          requiredError: 'لطفا فیلدهای اجباری را تکمیل کنید.',
           captcha: 'من ربات نیستم'
         },
         locations: {
@@ -854,6 +858,10 @@ export const messages: Messages = {
           subject: 'Subject',
           message: 'Message',
           submit: 'Send email',
+          submitting: 'Sending...',
+          success: 'Your message has been sent.',
+          error: 'Failed to send your message. Please try again.',
+          requiredError: 'Please fill in all required fields.',
           captcha: 'I am not a robot'
         },
         locations: {
@@ -1320,6 +1328,10 @@ export const messages: Messages = {
           subject: 'Тема',
           message: 'Сообщение',
           submit: 'Отправить',
+          submitting: 'Отправка...',
+          success: 'Ваше сообщение отправлено.',
+          error: 'Не удалось отправить сообщение. Повторите попытку.',
+          requiredError: 'Заполните все обязательные поля.',
           captcha: 'Я не робот'
         },
         locations: {

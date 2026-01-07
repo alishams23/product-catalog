@@ -101,6 +101,25 @@ type RootCategory = {
   }>
 }
 
+type ApiCategory = {
+  id?: number
+  name?: string
+  slug?: string
+}
+
+type ApiGalleryImage = {
+  id?: number
+  url?: string
+  alt_text?: string
+  sort_order?: number
+}
+
+type ApiFaqItemV2 = {
+  question?: string
+  answer?: string
+  sort_order?: number
+}
+
 type ApiMedia = {
   media_type?: string
   role?: string
@@ -156,10 +175,16 @@ type ApiFaqItem = {
 }
 
 type ApiProductDetail = {
+  id?: number
   title?: string
   slug?: string
   short_description?: string
   description?: string
+  hero_image?: string
+  hero_video?: string
+  gallery_images?: ApiGalleryImage[]
+  faq_items?: ApiFaqItemV2[]
+  categories?: ApiCategory[] | number[]
   highlights?: string
   applications?: string
   technical_overview?: string
@@ -240,6 +265,10 @@ function normalizeText(input: string): string {
 
 function stripHtml(input: string): string {
   return normalizeText((input || '').replace(/<[^>]*>/g, ' '))
+}
+
+function looksLikeHtml(input: string): boolean {
+  return /<[^>]+>/.test(input)
 }
 
 function safeDecodeURIComponent(value: string): string {
@@ -354,6 +383,75 @@ function normalizeBlocks(blocks: ContentBlock[] | undefined): ContentBlock[] {
   })
 }
 
+function mapApiV2(api: ApiProductDetail, fallbackSlug: string): ProductDetail {
+  const slug = normalizeText(api.slug ?? fallbackSlug)
+  const title = normalizeText(api.title ?? slug)
+
+  const categoryItems = (Array.isArray(api.categories) ? api.categories : [])
+    .filter((item): item is ApiCategory => Boolean(item && typeof item === 'object'))
+  const primaryCategory = categoryItems.find((item) => normalizeText(item.slug ?? ''))
+  const category = normalizeText(primaryCategory?.name ?? '')
+  const categoryHref = primaryCategory?.slug
+    ? `/categories/${encodeURIComponent(primaryCategory.slug)}`
+    : undefined
+
+  const heroImage = normalizeText(api.hero_image ?? '')
+  const heroVideo = normalizeText(api.hero_video ?? '')
+
+  const gallery = sortByOrder(api.gallery_images ?? [])
+  const galleryUrls = gallery
+    .map((item) => normalizeText(item.url ?? ''))
+    .filter(Boolean)
+
+  const heroAlt = (() => {
+    if (!heroImage) return ''
+    const match = gallery.find((item) => normalizeText(item.url ?? '') === heroImage)
+    return normalizeText(match?.alt_text ?? '')
+  })()
+
+  const imageGallery = Array.from(new Set([heroImage, ...galleryUrls].filter(Boolean)))
+  const image = heroImage || imageGallery[0] || ''
+
+  const rawDescription = typeof api.description === 'string' ? api.description.trim() : ''
+  const summaryHtml = rawDescription && looksLikeHtml(rawDescription) ? rawDescription : ''
+  const descriptionText = summaryHtml ? '' : normalizeText(rawDescription)
+  const shortDescription = normalizeText(api.short_description ?? '')
+  const description = descriptionText || shortDescription
+
+  const faqItems = sortByOrder(api.faq_items ?? [])
+    .map((item) => {
+      const rawAnswer = (item.answer ?? '').trim()
+      const answerHtml = rawAnswer && looksLikeHtml(rawAnswer) ? decodeHtmlEntities(rawAnswer) : ''
+      return {
+        question: normalizeText(item.question ?? ''),
+        answer: stripHtml(answerHtml || rawAnswer),
+        answerHtml: answerHtml || undefined
+      }
+    })
+    .filter((item) => item.question && item.answer)
+
+  const videoGallery = heroVideo ? [heroVideo] : []
+
+  return {
+    slug,
+    title,
+    image: image || undefined,
+    imageGallery: imageGallery.length ? imageGallery : undefined,
+    description: description || undefined,
+    summaryHtml: summaryHtml || undefined,
+    category: category || undefined,
+    categoryHref: categoryHref || undefined,
+    heroImage: heroImage || undefined,
+    heroAlt: heroAlt || undefined,
+    heroTitle: title || undefined,
+    heroTagline: shortDescription || undefined,
+    heroVideo: heroVideo || undefined,
+    videoGallery: videoGallery.length ? videoGallery : undefined,
+    faqItems: faqItems.length ? faqItems : undefined,
+    href: slug ? `/products/${encodeURIComponent(slug)}` : ''
+  }
+}
+
 function mapLegacyApi(api: ApiProductDetail, fallbackSlug: string): ProductDetail {
   const moarefiBlocks = normalizeBlocks(api.moarefiBlocks)
   const moshakhasatBlocks = normalizeBlocks(api.moshakhasatBlocks)
@@ -404,6 +502,10 @@ function mapLegacyApi(api: ApiProductDetail, fallbackSlug: string): ProductDetai
 function mapApiToProduct(api: ApiProductDetail | null | undefined, fallbackSlug: string): ProductDetail {
   if (api?.faqItems || api?.moarefiBlocks || api?.moshakhasatBlocks || api?.videoBlocks) {
     return mapLegacyApi(api, fallbackSlug)
+  }
+
+  if (api && (api.hero_image || api.hero_video || Array.isArray(api.gallery_images))) {
+    return mapApiV2(api, fallbackSlug)
   }
 
   const media = sortByOrder(api?.media ?? [])
@@ -647,6 +749,18 @@ const productImages = computed(() => {
   const merged = [data.value?.heroImage, data.value?.image, ...images].filter(Boolean) as string[]
   return Array.from(new Set(merged))
 })
+const activeImageIndex = ref(0)
+const activeImage = computed(() => productImages.value[activeImageIndex.value] ?? productImages.value[0] ?? '')
+
+watch(productImages, (images) => {
+  if (!images.length) {
+    activeImageIndex.value = 0
+    return
+  }
+  if (activeImageIndex.value >= images.length) {
+    activeImageIndex.value = 0
+  }
+}, { immediate: true })
 
 const fallbackNav = computed<NavItem[]>(() => [
   { id: 'moarefi', label: t('productDetail.fallbackNav.intro') },
@@ -656,8 +770,18 @@ const fallbackNav = computed<NavItem[]>(() => [
 ])
 
 const navItems = computed(() => {
-  const items = data.value?.navItems?.length ? data.value.navItems : fallbackNav.value
-  return items.filter((item) => item.id !== 'price')
+  const apiItems = data.value?.navItems?.length ? data.value.navItems : null
+  const items = apiItems ?? fallbackNav.value
+  const filtered = items.filter((item) => item.id !== 'price')
+  if (apiItems) return filtered
+
+  const available = new Set<string>()
+  if (data.value?.moarefiBlocks?.length) available.add('moarefi')
+  if (data.value?.moshakhasatBlocks?.length || data.value?.specModels?.length) available.add('moshakhasat')
+  if (data.value?.videoBlocks?.length || data.value?.videoGallery?.length || data.value?.heroVideo) available.add('video')
+  if (data.value?.faqItems?.length) available.add('faq')
+
+  return filtered.filter((item) => available.has(item.id))
 })
 
 const videoSources = computed(() => {
@@ -980,20 +1104,37 @@ useSeoMeta({
         <div class="mt-8 grid items-start gap-10 lg:grid-cols-12">
           <div class="order-2 flex justify-center lg:order-1 lg:col-span-6 lg:justify-start">
             <div v-if="productImages.length" class="w-full max-w-xl">
-              <div class="space-y-6">
-                <div
+              <div class="overflow-hidden rounded-[28px] bg-white shadow-[0_18px_45px_rgba(0,0,0,0.12)]">
+                <NuxtImg
+                  v-if="activeImage"
+                  :src="activeImage"
+                  :alt="data?.heroAlt || data?.title || heroTitle"
+                  class="w-full object-contain"
+                  sizes="(max-width: 768px) 100vw, 520px"
+                  loading="eager"
+                />
+              </div>
+
+              <div v-if="productImages.length > 1" class="mt-4 flex gap-3 overflow-x-auto pb-2 [-webkit-overflow-scrolling:touch]">
+                <button
                   v-for="(image, index) in productImages"
                   :key="`${image}-${index}`"
-                  class="overflow-hidden rounded-[28px]"
+                  type="button"
+                  class="group relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-white transition"
+                  :class="index === activeImageIndex ? 'ring-2 ring-amber-500' : 'ring-1 ring-zinc-200 hover:ring-amber-300'"
+                  :aria-pressed="index === activeImageIndex"
+                  :aria-label="`${heroTitle} ${index + 1}`"
+                  :title="`${heroTitle} ${index + 1}`"
+                  @click="activeImageIndex = index"
                 >
                   <NuxtImg
                     :src="image"
                     :alt="data?.heroAlt || data?.title || heroTitle"
-                    class="w-full object-contain"
-                    sizes="(max-width: 768px) 100vw, 520px"
-                    :loading="index === 0 ? 'eager' : 'lazy'"
+                    class="h-full w-full object-contain"
+                    sizes="80px"
+                    :loading="index < 4 ? 'eager' : 'lazy'"
                   />
-                </div>
+                </button>
               </div>
             </div>
           </div>

@@ -1,56 +1,28 @@
 import type { H3Event } from 'h3'
 
-type ContentBlock =
-  | { type: 'heading'; text: string }
-  | { type: 'paragraph'; text: string }
-  | { type: 'list'; items: string[] }
-  | { type: 'image'; src: string; alt?: string }
-  | { type: 'video'; src: string }
-
-type SpecModel = {
+type ProductCategory = {
+  id: number
   name: string
-  specs: Array<{ label: string; value: string }>
+  slug: string
 }
 
-type NavItem = {
-  id: string
-  label: string
-}
-
-type FaqItem = {
-  question: string
-  answer: string
+type ProductGalleryImage = {
+  id: number
+  url: string
+  alt_text?: string
+  sort_order?: number
 }
 
 type ProductDetail = {
-  slug: string
+  id: number
   title: string
-  image?: string
-  price?: string
+  slug: string
+  categories: ProductCategory[]
+  short_description?: string
   description?: string
-  highlight?: string
-  highlightHtml?: string
-  summaryHtml?: string
-  category?: string
-  categoryHref?: string
-  cartHref?: string
-  heroImage?: string
-  heroAlt?: string
-  heroEnglish?: string
-  heroTitle?: string
-  heroTagline?: string
-  heroVideo?: string
-  heroCatalogHref?: string
-  heroCatalogLabel?: string
-  navItems?: NavItem[]
-  moarefiBlocks?: ContentBlock[]
-  moshakhasatBlocks?: ContentBlock[]
-  videoBlocks?: ContentBlock[]
-  specModels?: SpecModel[]
-  specDownloadHref?: string
-  videoGallery?: string[]
-  faqItems?: FaqItem[]
-  href: string
+  hero_image?: string
+  hero_video?: string
+  gallery_images: ProductGalleryImage[]
 }
 
 const API_BASE_URL = 'http://156.236.31.140:8001'

@@ -33,6 +33,7 @@ const isAtTop = useState<boolean>('header:isAtTop', () => true)
 const baseScrollThresholdPx = 8
 const productScrollThresholdPx = 140
 const { t, locale, localePath, switchLocalePath, isRtl } = useTranslations()
+const showLanguageSwitcher = true
 
 const topLinks = computed<NavLink[]>(() => [
   { label: t('header.links.about'), href: '/about' },
@@ -58,7 +59,6 @@ const activeLanguageLabel = computed(() => {
   if (locale.value === 'ru') return t('header.language.ru')
   return t('header.language.en')
 })
-
 const productsTabs = computed<MegaTab[]>(() => [
   {
     key: 'ovens',
@@ -210,14 +210,6 @@ function closeAll() {
   isMobileOpen.value = false
   closeProductsMenu()
   isLanguageOpen.value = false
-}
-
-function selectLanguage() {
-  isLanguageOpen.value = false
-}
-
-function selectLanguageAndClose() {
-  closeAll()
 }
 
 const route = useRoute()
@@ -416,6 +408,7 @@ watch(() => route.fullPath, async () => {
           </template>
 
           <div
+            v-if="showLanguageSwitcher"
             class="relative"
             @mouseenter="isLanguageOpen = true"
             @mouseleave="isLanguageOpen = false"
@@ -438,7 +431,7 @@ watch(() => route.fullPath, async () => {
                     v-if="isInternalLink(option.href)"
                     class="block rounded-lg px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900"
                     :to="option.href"
-                    @click="selectLanguage()"
+                    @click="isLanguageOpen = false"
                   >
                     {{ option.label }}
                   </NuxtLink>
@@ -448,7 +441,7 @@ watch(() => route.fullPath, async () => {
                     :href="option.href"
                     target="_blank"
                     rel="noopener"
-                    @click="selectLanguage()"
+                    @click="isLanguageOpen = false"
                   >
                     {{ option.label }}
                   </a>
@@ -456,6 +449,7 @@ watch(() => route.fullPath, async () => {
               </div>
             </div>
           </div>
+
         </nav>
 
         <div class="flex items-center gap-2" :class="isRtl ? 'ml-auto lg:mr-auto lg:ml-0' : 'ml-auto'">
@@ -525,7 +519,7 @@ watch(() => route.fullPath, async () => {
               </template>
             </div>
 
-            <div class="mt-6 border-t border-zinc-200 pt-4">
+            <div v-if="showLanguageSwitcher" class="mt-6 border-t border-zinc-200 pt-4">
               <p class="px-3 text-xs font-semibold text-zinc-500">{{ t('header.language.label') }}</p>
               <div class="mt-2 space-y-1">
                 <template v-for="option in languageOptions" :key="option.label">
@@ -533,7 +527,7 @@ watch(() => route.fullPath, async () => {
                     v-if="isInternalLink(option.href)"
                     class="flex items-center justify-between rounded-xl px-3 py-2 text-sm font-semibold text-zinc-800 hover:bg-zinc-50"
                     :to="option.href"
-                    @click="selectLanguageAndClose()"
+                    @click="closeAll"
                   >
                     <span>{{ option.label }}</span>
                     <span class="text-zinc-300">></span>
@@ -544,7 +538,7 @@ watch(() => route.fullPath, async () => {
                     :href="option.href"
                     target="_blank"
                     rel="noopener"
-                    @click="selectLanguageAndClose()"
+                    @click="closeAll"
                   >
                     <span>{{ option.label }}</span>
                     <span class="text-zinc-300">></span>
@@ -552,7 +546,8 @@ watch(() => route.fullPath, async () => {
                 </template>
               </div>
             </div>
-              </nav>
+
+          </nav>
 
               <div class="border-t border-zinc-200 p-4 text-center">
                 <a class="text-xs font-semibold text-zinc-500" href="tel:+985132464090">

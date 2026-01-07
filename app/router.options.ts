@@ -1,6 +1,6 @@
 import type { RouterConfig } from '@nuxt/schema'
 
-const LOCALES = ['en', 'ru'] as const
+const LOCALES = ['en', 'fa'] as const
 
 export default <RouterConfig>{
   routes: (routes) => {

@@ -9,10 +9,44 @@ useSeoMeta({
 const heroImageLg = 'https://mbico.ir/wp-content/uploads/2024/07/mbi-countact-1400x510.jpg'
 const heroImageSm = 'https://mbico.ir/wp-content/uploads/2024/07/mbi-countact.jpg'
 const contactImage = 'https://mbico.ir/wp-content/uploads/2024/07/countactemail.png'
+const contactEndpoint = '/api/contact'
+
+const formState = reactive<Record<string, string>>({
+  full_name: '',
+  email: '',
+  phone: '',
+  subject: '',
+  message: ''
+})
+
+const isSubmitting = ref(false)
+const submitStatus = ref<'idle' | 'success' | 'error'>('idle')
+const validationMessage = ref<string | null>(null)
+const submitLabel = computed(() => t('pages.contact.form.submit'))
+const submittingLabel = computed(() => {
+  const key = 'pages.contact.form.submitting'
+  const value = t(key)
+  return value === key ? submitLabel.value : value
+})
+const successMessage = computed(() => {
+  const key = 'pages.contact.form.success'
+  const value = t(key)
+  return value === key ? 'پیام شما با موفقیت ارسال شد.' : value
+})
+const errorMessage = computed(() => {
+  const key = 'pages.contact.form.error'
+  const value = t(key)
+  return value === key ? 'ارسال پیام ناموفق بود. دوباره تلاش کنید.' : value
+})
+const requiredErrorMessage = computed(() => {
+  const key = 'pages.contact.form.requiredError'
+  const value = t(key)
+  return value === key ? 'لطفا فیلدهای اجباری را تکمیل کنید.' : value
+})
 
 const formFields = computed(() => ([
   {
-    name: 'fullName',
+    name: 'full_name',
     type: 'text',
     label: t('pages.contact.form.name'),
     placeholder: t('pages.contact.form.name'),
@@ -36,15 +70,55 @@ const formFields = computed(() => ([
     name: 'subject',
     type: 'text',
     label: t('pages.contact.form.subject'),
-    placeholder: t('pages.contact.form.subject')
+    placeholder: t('pages.contact.form.subject'),
+    required: true
   },
   {
     name: 'message',
     type: 'textarea',
     label: t('pages.contact.form.message'),
-    placeholder: t('pages.contact.form.message')
+    placeholder: t('pages.contact.form.message'),
+    required: true
   }
 ]))
+
+async function handleSubmit() {
+  submitStatus.value = 'idle'
+  validationMessage.value = null
+
+  const payload = {
+    full_name: formState.full_name.trim(),
+    email: formState.email.trim(),
+    phone: formState.phone.trim(),
+    subject: formState.subject.trim(),
+    message: formState.message.trim()
+  }
+
+  const missingRequired = Object.values(payload).some((value) => !value)
+  if (missingRequired) {
+    submitStatus.value = 'error'
+    validationMessage.value = requiredErrorMessage.value
+    return
+  }
+
+  if (isSubmitting.value) return
+  isSubmitting.value = true
+
+  try {
+    await $fetch(contactEndpoint, {
+      method: 'POST',
+      body: payload
+    })
+    submitStatus.value = 'success'
+    for (const key of Object.keys(formState)) {
+      formState[key] = ''
+    }
+  } catch {
+    submitStatus.value = 'error'
+  } finally {
+    isSubmitting.value = false
+  }
+}
 
 const locations = computed(() => ([
   {
@@ -253,7 +327,7 @@ const textAlign = computed(() => (isRtl.value ? 'text-right' : 'text-left'))
             id="sendmail"
             class="rounded-[40px] border border-amber-200/80 bg-[linear-gradient(140deg,#fffaf1_0%,#ffffff_55%,#fff1da_100%)] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.18)]"
           >
-            <form class="space-y-4 text-xs">
+            <form class="space-y-4 text-xs" @submit.prevent="handleSubmit">
               <label v-for="field in formFields" :key="field.name" class="block text-zinc-900">
                 <span class="font-semibold">
                   {{ field.label }}
@@ -261,26 +335,42 @@ const textAlign = computed(() => (isRtl.value ? 'text-right' : 'text-left'))
                 <span v-if="field.required" class="text-amber-600">
                   {{ t('pages.contact.form.required') }}
                 </span>
-                <component
-                  :is="field.type === 'textarea' ? 'textarea' : 'input'"
-                  :type="field.type === 'textarea' ? undefined : field.type"
+                <textarea
+                  v-if="field.type === 'textarea'"
                   :name="field.name"
                   :placeholder="field.placeholder"
+                  v-model.trim="formState[field.name]"
+                  :required="field.required"
+                  :disabled="isSubmitting"
+                  rows="4"
                   class="mt-2 w-full rounded-2xl border border-amber-200/70 bg-white px-4 py-3 text-sm text-zinc-800 placeholder:text-zinc-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-200"
-                  :rows="field.type === 'textarea' ? 4 : undefined"
+                />
+                <input
+                  v-else
+                  :type="field.type"
+                  :name="field.name"
+                  :placeholder="field.placeholder"
+                  v-model.trim="formState[field.name]"
+                  :required="field.required"
+                  :disabled="isSubmitting"
+                  class="mt-2 w-full rounded-2xl border border-amber-200/70 bg-white px-4 py-3 text-sm text-zinc-800 placeholder:text-zinc-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-200"
                 />
               </label>
 
-              <div class="rounded-2xl border border-dashed border-amber-200 bg-amber-50/70 px-4 py-4 text-center text-xs text-amber-700">
-                {{ t('pages.contact.form.captcha') }}
-              </div>
-
               <button
                 type="submit"
-                class="w-full rounded-full bg-amber-500 px-4 py-3 text-sm font-semibold text-white shadow-[0_12px_28px_rgba(248,144,20,0.35)] transition hover:bg-amber-600"
+                :disabled="isSubmitting"
+                class="w-full rounded-full bg-amber-500 px-4 py-3 text-sm font-semibold text-white shadow-[0_12px_28px_rgba(248,144,20,0.35)] transition hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-70"
               >
-                {{ t('pages.contact.form.submit') }}
+                {{ isSubmitting ? submittingLabel : submitLabel }}
               </button>
+
+              <p v-if="submitStatus === 'success'" class="text-xs font-semibold text-emerald-700" role="status">
+                {{ successMessage }}
+              </p>
+              <p v-else-if="submitStatus === 'error'" class="text-xs font-semibold text-rose-600" role="status">
+                {{ validationMessage || errorMessage }}
+              </p>
             </form>
           </div>
         </div>
@@ -298,7 +388,7 @@ const textAlign = computed(() => (isRtl.value ? 'text-right' : 'text-left'))
           <div
             class="rounded-[36px] border border-amber-200/80 bg-[linear-gradient(140deg,#fffaf1_0%,#ffffff_55%,#fff1da_100%)] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.18)]"
           >
-            <form class="space-y-4 text-xs">
+            <form class="space-y-4 text-xs" @submit.prevent="handleSubmit">
               <label v-for="field in formFields" :key="field.name" class="block text-zinc-900">
                 <span class="font-semibold">
                   {{ field.label }}
@@ -306,26 +396,42 @@ const textAlign = computed(() => (isRtl.value ? 'text-right' : 'text-left'))
                 <span v-if="field.required" class="text-amber-600">
                   {{ t('pages.contact.form.required') }}
                 </span>
-                <component
-                  :is="field.type === 'textarea' ? 'textarea' : 'input'"
-                  :type="field.type === 'textarea' ? undefined : field.type"
+                <textarea
+                  v-if="field.type === 'textarea'"
                   :name="field.name"
                   :placeholder="field.placeholder"
+                  v-model.trim="formState[field.name]"
+                  :required="field.required"
+                  :disabled="isSubmitting"
+                  rows="4"
                   class="mt-2 w-full rounded-2xl border border-amber-200/70 bg-white px-4 py-3 text-sm text-zinc-800 placeholder:text-zinc-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-200"
-                  :rows="field.type === 'textarea' ? 4 : undefined"
+                />
+                <input
+                  v-else
+                  :type="field.type"
+                  :name="field.name"
+                  :placeholder="field.placeholder"
+                  v-model.trim="formState[field.name]"
+                  :required="field.required"
+                  :disabled="isSubmitting"
+                  class="mt-2 w-full rounded-2xl border border-amber-200/70 bg-white px-4 py-3 text-sm text-zinc-800 placeholder:text-zinc-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-200"
                 />
               </label>
 
-              <div class="rounded-2xl border border-dashed border-amber-200 bg-amber-50/70 px-4 py-4 text-center text-xs text-amber-700">
-                {{ t('pages.contact.form.captcha') }}
-              </div>
-
               <button
                 type="submit"
-                class="w-full rounded-full bg-amber-500 px-4 py-3 text-sm font-semibold text-white shadow-[0_12px_28px_rgba(248,144,20,0.35)] transition hover:bg-amber-600"
+                :disabled="isSubmitting"
+                class="w-full rounded-full bg-amber-500 px-4 py-3 text-sm font-semibold text-white shadow-[0_12px_28px_rgba(248,144,20,0.35)] transition hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-70"
               >
-                {{ t('pages.contact.form.submit') }}
+                {{ isSubmitting ? submittingLabel : submitLabel }}
               </button>
+
+              <p v-if="submitStatus === 'success'" class="text-xs font-semibold text-emerald-700" role="status">
+                {{ successMessage }}
+              </p>
+              <p v-else-if="submitStatus === 'error'" class="text-xs font-semibold text-rose-600" role="status">
+                {{ validationMessage || errorMessage }}
+              </p>
             </form>
           </div>
         </div>

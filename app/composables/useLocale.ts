@@ -1,13 +1,13 @@
 import { isLocale, type Locale } from '~/i18n/messages'
 
-const localeRegex = /^\/(en|ru)(?=\/|$|\?|#)/
+const localeRegex = /^\/(en|fa)(?=\/|$|\?|#)/
 
 export function useLocale() {
   const route = useRoute()
   const locale = computed<Locale>(() => {
     const match = localeRegex.exec(route.path)
     const value = match?.[1]
-    return value && isLocale(value) ? value : 'fa'
+    return value && isLocale(value) ? value : 'ru'
   })
 
   const dir = computed(() => (locale.value === 'fa' ? 'rtl' : 'ltr'))
@@ -23,14 +23,14 @@ export function useLocale() {
   const localePath = (path: string, targetLocale: Locale = locale.value) => {
     if (!path.startsWith('/')) return path
     const normalized = normalizePath(path)
-    if (targetLocale === 'fa') return normalized
+    if (targetLocale === 'ru') return normalized
     if (normalized === '/') return `/${targetLocale}`
     return `/${targetLocale}${normalized}`
   }
 
   const switchLocalePath = (targetLocale: Locale) => {
     const base = stripLocale(route.fullPath || route.path)
-    if (targetLocale === 'fa') return base
+    if (targetLocale === 'ru') return base
     if (base === '/') return `/${targetLocale}`
     return `/${targetLocale}${base}`
   }
