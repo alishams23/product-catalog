@@ -223,7 +223,7 @@ const sections = computed<ProductSection[]>(() => {
 
 <template>
   <div class="bg-white">
-    <section class="mx-auto max-w-[1220px] px-4 pb-16 pt-16">
+    <section class="mx-auto max-w-305 px-4 pb-16 pt-16">
       <h1 class="text-center text-3xl font-black text-zinc-900 sm:text-4xl">
         {{ t('products.list.title') }}
       </h1>
@@ -254,7 +254,7 @@ const sections = computed<ProductSection[]>(() => {
           <section v-for="section in sections" :key="section.title" class="space-y-6">
             <div class="space-y-6">
               <div class="relative flex items-center justify-center">
-                <span class="absolute inset-x-0 top-1/2 h-[3px] -translate-y-1/2 bg-amber-500" />
+                <span class="absolute inset-x-0 top-1/2 h-0.75 -translate-y-1/2 bg-amber-500" />
                 <h2 class="relative rounded-md border border-zinc-200 bg-white px-7 py-2 text-lg font-black text-amber-600 shadow-[0_8px_18px_rgba(0,0,0,0.08)] sm:text-xl">
                   {{ section.title }}
                 </h2>

@@ -314,7 +314,7 @@ watch(() => route.fullPath, async () => {
               @mouseenter="openProductsMenu"
               @mouseleave="scheduleCloseProductsMenu"
             >
-              <div class="w-[720px] rounded-2xl border border-zinc-200 bg-white shadow-xl">
+              <div class="w-180 rounded-2xl border border-zinc-200 bg-white shadow-xl">
                 <div class="grid grid-cols-12 gap-0 overflow-hidden rounded-2xl">
                   <div class="col-span-4 bg-zinc-50 p-4" :class="isRtl ? 'border-l border-zinc-200' : 'border-r border-zinc-200'">
                     <p class="mb-2 text-xs font-semibold text-zinc-500" :class="isRtl ? 'text-right' : 'text-left'">
@@ -479,7 +479,7 @@ watch(() => route.fullPath, async () => {
     </div>
 
     <Teleport to="body">
-      <div v-if="isMobileOpen" class="lg:hidden fixed inset-0 z-[70]">
+      <div v-if="isMobileOpen" class="lg:hidden fixed inset-0 z-70">
         <button class="absolute inset-0 z-0 bg-black/60" :aria-label="t('header.aria.closeMenu')" @click="isMobileOpen = false" />
 
         <Transition
@@ -490,7 +490,7 @@ watch(() => route.fullPath, async () => {
           leave-from-class="translate-x-0"
           leave-to-class="translate-x-full"
         >
-          <aside class="absolute right-0 top-0 z-10 h-full w-[86vw] max-w-[340px] bg-white shadow-2xl">
+          <aside class="absolute right-0 top-0 z-10 h-full w-[86vw] max-w-85 bg-white shadow-2xl">
             <div class="flex h-full flex-col">
               <div class="flex items-center justify-between border-b border-zinc-200 px-4 py-4">
                 <MbicoLogo class="h-8 w-auto" />

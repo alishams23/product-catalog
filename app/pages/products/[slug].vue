@@ -48,6 +48,7 @@ type ProductDetail = {
   slug: string
   title: string
   image?: string
+  imageGallery?: readonly string[]
   price?: string
   description?: string
   highlight?: string
@@ -105,6 +106,8 @@ type ApiMedia = {
   role?: string
   title?: string
   url?: string
+  image?: string | null
+  file?: string | null
   alt_text?: string
   is_primary?: boolean
   sort_order?: number
@@ -278,13 +281,25 @@ function sortByOrder<T extends { sort_order?: number }>(items: T[]): T[] {
 function coerceMediaUrl(value: unknown): { url: string; alt?: string } {
   if (typeof value === 'string') return { url: value }
   if (value && typeof value === 'object') {
-    const maybe = value as { url?: unknown; src?: unknown; href?: unknown; alt_text?: unknown; alt?: unknown }
+    const maybe = value as {
+      url?: unknown
+      src?: unknown
+      href?: unknown
+      image?: unknown
+      file?: unknown
+      alt_text?: unknown
+      alt?: unknown
+    }
     const url = typeof maybe.url === 'string'
       ? maybe.url
       : typeof maybe.src === 'string'
         ? maybe.src
         : typeof maybe.href === 'string'
           ? maybe.href
+          : typeof maybe.image === 'string'
+            ? maybe.image
+            : typeof maybe.file === 'string'
+              ? maybe.file
           : ''
     const alt = typeof maybe.alt_text === 'string'
       ? maybe.alt_text
@@ -302,13 +317,13 @@ function isVideoUrl(url: string): boolean {
 
 function isImageMedia(item: ApiMedia): boolean {
   if (item.media_type) return item.media_type === 'image'
-  const url = coerceMediaUrl(item.url).url
+  const url = coerceMediaUrl(item).url
   return Boolean(url) && !isVideoUrl(url)
 }
 
 function isVideoMedia(item: ApiMedia): boolean {
   if (item.media_type) return item.media_type === 'video'
-  const url = coerceMediaUrl(item.url).url
+  const url = coerceMediaUrl(item).url
   return Boolean(url) && isVideoUrl(url)
 }
 
@@ -349,11 +364,15 @@ function mapLegacyApi(api: ApiProductDetail, fallbackSlug: string): ProductDetai
   const heroImage = coerceMediaUrl(api.heroImage).url
   const heroAlt = coerceMediaUrl(api.heroImage).alt || api.heroAlt
   const heroVideo = coerceMediaUrl(api.heroVideo).url
+  const legacyMedia = sortByOrder(api.media ?? []).filter(isImageMedia)
+  const legacyGallery = legacyMedia.map((item) => coerceMediaUrl(item).url).filter(Boolean)
+  const imageGallery = Array.from(new Set([heroImage, image, ...legacyGallery].filter(Boolean)))
 
   return {
     slug: api.slug ?? fallbackSlug,
     title: api.title ?? api.heroTitle ?? fallbackSlug,
     image: image || undefined,
+    imageGallery: imageGallery.length ? imageGallery : undefined,
     price: api.price ? String(api.price) : undefined,
     description: api.description,
     highlight: api.highlight,
@@ -398,13 +417,16 @@ function mapApiToProduct(api: ApiProductDetail | null | undefined, fallbackSlug:
     ?? heroMedia
     ?? imageMedia[0]
 
-  const heroImage = coerceMediaUrl(heroMedia?.url).url
+  const heroImage = coerceMediaUrl(heroMedia).url
   const heroAlt = normalizeText(api?.hero_alt ?? heroMedia?.alt_text ?? heroMedia?.title ?? '')
-  const image = coerceMediaUrl(primaryImage?.url ?? heroImage).url
+  const image = coerceMediaUrl(primaryImage ?? heroImage).url
+  const imageGallery = imageMedia
+    .map((item) => coerceMediaUrl(item).url)
+    .filter(Boolean)
 
   const demoVideo = coerceMediaUrl(api?.demo_video_url ?? api?.hero_video_url).url
   const videoGallery = sortByOrder(videoMedia)
-    .map((item) => coerceMediaUrl(item.url).url)
+    .map((item) => coerceMediaUrl(item).url)
     .filter(Boolean)
 
   if (demoVideo && !videoGallery.includes(demoVideo)) {
@@ -517,11 +539,21 @@ function mapApiToProduct(api: ApiProductDetail | null | undefined, fallbackSlug:
   const specDownloadHref = normalizeText(api?.spec_download_href ?? api?.datasheet_url ?? '')
   const heroCatalogHref = normalizeText(api?.hero_catalog_href ?? api?.brochure_url ?? '')
   const heroCatalogLabel = normalizeText(api?.hero_catalog_label ?? '')
+  const imageGalleryUnique = [...imageGallery]
+
+  if (heroImage && !imageGalleryUnique.includes(heroImage)) {
+    imageGalleryUnique.unshift(heroImage)
+  }
+
+  if (image && !imageGalleryUnique.includes(image)) {
+    imageGalleryUnique.unshift(image)
+  }
 
   return {
     slug,
     title,
     image: image || undefined,
+    imageGallery: imageGalleryUnique.length ? imageGalleryUnique : undefined,
     price: price || undefined,
     description: description || undefined,
     highlight: highlight || undefined,
@@ -610,6 +642,11 @@ const breadcrumbCategoryHref = computed(() =>
 const breadcrumbCategoryIsInternal = computed(() => breadcrumbCategoryHref.value.startsWith('/categories'))
 
 const heroTitle = computed(() => data.value?.heroTitle || data.value?.title || data.value?.slug)
+const productImages = computed(() => {
+  const images = data.value?.imageGallery ?? []
+  const merged = [data.value?.heroImage, data.value?.image, ...images].filter(Boolean) as string[]
+  return Array.from(new Set(merged))
+})
 
 const fallbackNav = computed<NavItem[]>(() => [
   { id: 'moarefi', label: t('productDetail.fallbackNav.intro') },
@@ -940,21 +977,23 @@ useSeoMeta({
 
     <section class="relative bg-white">
       <div class="relative mx-auto max-w-[1220px] px-4 pb-12 pt-12">
-        <div class="mt-8 grid gap-10 lg:grid-cols-12">
-          <div class="order-2 flex justify-center lg:order-1 lg:col-span-6">
-            <div v-if="data?.image" class="w-full max-w-xl">
-              <div class="rounded-[28px] bg-white p-6 shadow-[0_18px_50px_rgba(0,0,0,0.12)]">
-                <NuxtImg
-                  :src="data.image"
-                  :alt="data.title"
-                  class="w-full object-contain"
-                  sizes="(max-width: 768px) 100vw, 520px"
-                />
-              </div>
-              <div class="mt-4 flex justify-center gap-2">
-                <span class="h-2.5 w-2.5 rounded-sm border border-zinc-300 bg-white" />
-                <span class="h-2.5 w-2.5 rounded-sm bg-zinc-900" />
-                <span class="h-2.5 w-2.5 rounded-sm border border-zinc-300 bg-white" />
+        <div class="mt-8 grid items-start gap-10 lg:grid-cols-12">
+          <div class="order-2 flex justify-center lg:order-1 lg:col-span-6 lg:justify-start">
+            <div v-if="productImages.length" class="w-full max-w-xl">
+              <div class="space-y-6">
+                <div
+                  v-for="(image, index) in productImages"
+                  :key="`${image}-${index}`"
+                  class="overflow-hidden rounded-[28px]"
+                >
+                  <NuxtImg
+                    :src="image"
+                    :alt="data?.heroAlt || data?.title || heroTitle"
+                    class="w-full object-contain"
+                    sizes="(max-width: 768px) 100vw, 520px"
+                    :loading="index === 0 ? 'eager' : 'lazy'"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -976,16 +1015,16 @@ useSeoMeta({
               {{ t('productDetail.noDetails') }}
             </p>
 
-          <div v-if="data?.highlight || data?.highlightHtml" class="mt-8 rounded-[28px] border border-zinc-200 bg-white p-6 shadow-[0_20px_50px_rgba(0,0,0,0.12)]">
-            <div
-              v-if="data?.highlightHtml"
-              class="text-justify text-sm font-semibold leading-7 text-amber-700"
-              v-html="data.highlightHtml"
-            />
-            <p v-else-if="data?.highlight" class="text-justify text-sm font-semibold leading-7 text-amber-700">
-              {{ data.highlight }}
-            </p>
-          </div>
+            <div v-if="data?.highlight || data?.highlightHtml" class="mt-8 rounded-[28px] border border-zinc-200 bg-white p-6 shadow-[0_20px_50px_rgba(0,0,0,0.12)]">
+              <div
+                v-if="data?.highlightHtml"
+                class="text-justify text-sm font-semibold leading-7 text-amber-700"
+                v-html="data.highlightHtml"
+              />
+              <p v-else-if="data?.highlight" class="text-justify text-sm font-semibold leading-7 text-amber-700">
+                {{ data.highlight }}
+              </p>
+            </div>
           </div>
         </div>
 
@@ -1279,7 +1318,7 @@ useSeoMeta({
           <div class="h-[2px] flex-1 bg-amber-500"></div>
         </div>
 
-        <div class="mt-8 space-y-4">
+        <div class="mt-8 grid gap-4 md:grid-cols-2">
           <details
             v-for="item in data.faqItems"
             :key="item.question"

@@ -1,10 +1,7 @@
-export type Locale = 'fa' | 'en' | 'ru'
 
-type MessageValue = string | { [key: string]: MessageValue }
 
-type Messages = Record<Locale, MessageValue>
 
-export const messages: Messages = {
+const messages = {
   fa: {
     brand: {
       name: 'صنایع پخت مشهد'
@@ -106,8 +103,8 @@ export const messages: Messages = {
         }
       },
       cta: {
-        phone: 'تماس: ۰۵۱-۳۲۴۶۳۰۸۰',
-        phoneShort: 'تماس: 051-32464090'
+        phone: 'تماس-۳۲۴۶۳۰۸۰',
+        phoneShort: 'تماس-32464090'
       },
       aria: {
         openMenu: 'باز کردن منو',
@@ -394,7 +391,7 @@ export const messages: Messages = {
           factory: {
             title: 'کارخانه و خدمات پس از فروش',
             addressLabel: 'آدرس',
-            address: 'مشهد، بزرگراه آسیایی، کیلومتر ۲۲، ابتدای جاده محمد آباد قائم مقام، کد پستی: ۹۳۵۹۱۷۴۷۹۹',
+            address: 'مشهد، بزرگراه آسیایی، کیلومتر ۲۲، ابتدای جاده محمد آباد قائم مقام، کد پستی',
             phoneLabel: 'شماره تماس',
             phone: '۰۵۱۳۲۴۶۴۰۹۰',
             faxLabel: 'فاکس',
@@ -405,7 +402,7 @@ export const messages: Messages = {
           headOffice: {
             title: 'دفتر مرکزی',
             addressLabel: 'آدرس',
-            address: 'مشهد، خیابان ملک الشعراء بهار، بین بهار ۱۲ و ۱۴، پلاک ۵۷۹، کد پستی: ۹۱۷۳۶۷۵۱۵۶',
+            address: 'مشهد، خیابان ملک الشعراء بهار، بین بهار ۱۲ و ۱۴، پلاک ۵۷۹، کد پستی',
             phoneLabel: 'شماره تماس',
             phone: '۰۵۱۳۸۵۸۳۱۸۰',
             faxLabel: 'فاکس',
@@ -572,8 +569,8 @@ export const messages: Messages = {
         }
       },
       cta: {
-        phone: 'Call: 051-32463080',
-        phoneShort: 'Call: 051-32464090'
+        phone: 'Call-32463080',
+        phoneShort: 'Call-32464090'
       },
       aria: {
         openMenu: 'Open menu',
@@ -792,7 +789,7 @@ export const messages: Messages = {
           paragraph2: 'From the start, the company planned to export its products and in 1371 began shipments to Central Asia, becoming one of the first exporters of bread-baking machinery. In the following years, exports to other countries expanded its footprint, and today the company is the country\'s largest manufacturer and exporter of bakery and pastry machines with the most complete product portfolio among competitors.',
           paragraph3: 'Mashhad Baking Industries products hold the Iranian National Standard, ISO 9001, and CE, UL, and GOST certifications. Continuous efforts to improve quality and reach global standards, along with international market development, have placed the company among the leading exporters of baking technologies and earned the title of "National Sample Exporter" for several consecutive years.',
           paragraph4: 'The company treats compliance with national and international standards as a core requirement and has exported products to more than 46 countries, including the United States and developed European countries where it is recognized as a leading technology name.',
-          paragraph5: 'Products have been exported to more than 46 countries, including: United States, Canada, Germany, Australia, Spain, United Kingdom, Russia, Netherlands, Norway, Sweden, Austria, New Zealand, South Korea, Turkey, Malaysia, Thailand, Philippines, Ukraine, Armenia, Azerbaijan, Georgia, Kazakhstan, Kyrgyzstan, Tajikistan, Afghanistan, Turkmenistan, Uzbekistan, Pakistan, Oman, Iraq, Lebanon, Bahrain, Saudi Arabia, the UAE, and more.'
+          paragraph5: 'Products have been exported to more than 46 countries, including States, Canada, Germany, Australia, Spain, United Kingdom, Russia, Netherlands, Norway, Sweden, Austria, New Zealand, South Korea, Turkey, Malaysia, Thailand, Philippines, Ukraine, Armenia, Azerbaijan, Georgia, Kazakhstan, Kyrgyzstan, Tajikistan, Afghanistan, Turkmenistan, Uzbekistan, Pakistan, Oman, Iraq, Lebanon, Bahrain, Saudi Arabia, the UAE, and more.'
         },
         highlight: {
           body: 'As one of the oldest and most reputable manufacturers of bakery equipment, Mashhad Baking Industries offers the widest variety of bakery machine models in Iran. We build numerous models with different capacities and features for baking segments such as Barbari, Taftoon, Lavash, and Sangak so that every bakery, from traditional to semi-industrial, can choose exactly what it needs.',
@@ -817,7 +814,7 @@ export const messages: Messages = {
         },
         policy: {
           title: 'Company policy',
-          body: 'To produce bread-baking machinery with the goal of improving product quality, meeting customer and legal requirements, and achieving continuous improvement, Mashhad Baking Industries has designed its quality management system based on ISO 9001:2008 and is committed to its implementation and ongoing improvement. In line with this system and vision, we leverage all capabilities, train and employ skilled staff, and identify and control all quality-affecting activities through effective system execution at every level to secure customer satisfaction. In parallel, turning ideas into products, combining knowledge and value (commercializing science and knowledge), and supporting research-based innovations to raise the performance of bread-baking machinery are among our core goals.',
+          body: 'To produce bread-baking machinery with the goal of improving product quality, meeting customer and legal requirements, and achieving continuous improvement, Mashhad Baking Industries has designed its quality management system based on ISO 9001 and is committed to its implementation and ongoing improvement. In line with this system and vision, we leverage all capabilities, train and employ skilled staff, and identify and control all quality-affecting activities through effective system execution at every level to secure customer satisfaction. In parallel, turning ideas into products, combining knowledge and value (commercializing science and knowledge), and supporting research-based innovations to raise the performance of bread-baking machinery are among our core goals.',
           leaders: {
             ceo: {
               name: 'Abolghasem Eshaq Abadi',
@@ -860,31 +857,31 @@ export const messages: Messages = {
           factory: {
             title: 'Factory & after-sales service',
             addressLabel: 'Address',
-            address: 'Mashhad, Asian Highway, km 22, beginning of Mohammad Abad Qaem-Maqam road, Postal code: 9359174799',
+            address: 'Mashhad, Asian Highway, km 22, beginning of Mohammad Abad Qaem-Maqam road, Postal code',
             phoneLabel: 'Phone',
             phone: '05132464090',
             faxLabel: 'Fax',
             fax: '05132464090',
             hoursLabel: 'Working hours',
-            hours: 'Sat–Wed (non-holiday days) 07:30–17:00'
+            hours: 'Sat–Wed (non-holiday days) 07–17'
           },
           headOffice: {
             title: 'Head office',
             addressLabel: 'Address',
-            address: "Mashhad, Malek-o Sho'ara Bahar St., between Bahar 12 and 14, No. 579, Postal code: 9173675156",
+            address: "Mashhad, Malek-o Sho'ara Bahar St., between Bahar 12 and 14, No. 579, Postal code",
             phoneLabel: 'Phone',
             phone: '05138583180',
             faxLabel: 'Fax',
             fax: '05138583189',
             hoursLabel: 'Working hours',
-            hours: 'Sat–Thu (non-holiday days) 08:00–20:00'
+            hours: 'Sat–Thu (non-holiday days) 08–20'
           },
           rnd: {
             title: 'R&D Center of Mashhad Baking Industries',
             addressLabel: 'Address',
             address: 'Mashhad, Vakilabad St., Ferdowsi University, Science and Technology Park, Chamran Building',
             hoursLabel: 'Working hours',
-            hours: 'Sat–Thu (non-holiday days) 08:00–14:00'
+            hours: 'Sat–Thu (non-holiday days) 08–14'
           }
         },
         links: {
@@ -1038,8 +1035,8 @@ export const messages: Messages = {
         }
       },
       cta: {
-        phone: 'Тел.: 051-32463080',
-        phoneShort: 'Тел.: 051-32464090'
+        phone: 'Тел.-32463080',
+        phoneShort: 'Тел.-32464090'
       },
       aria: {
         openMenu: 'Открыть меню',
@@ -1258,7 +1255,7 @@ export const messages: Messages = {
           paragraph2: 'С момента основания компания планировала экспорт и в 1371 году начала поставки в Центральную Азию, став одним из первых экспортеров хлебопекарного оборудования. В последующие годы экспорт расширился, и сегодня компания является крупнейшим производителем и экспортером хлебопекарных и кондитерских машин в стране и обладает самым полным портфелем продукции среди конкурентов.',
           paragraph3: 'Продукция Mashhad Baking Industries соответствует национальному стандарту Ирана, имеет сертификаты ISO 9001, CE, UL и GOST. Непрерывные усилия по повышению качества, достижению мировых стандартов и развитию международных рынков вывели компанию в число ведущих экспортеров технологий выпечки и принесли ей звание «Национальный образцовый экспортер» в течение нескольких лет подряд.',
           paragraph4: 'Соблюдение национальных и международных стандартов является одним из ключевых требований компании, и она смогла экспортировать продукцию более чем в 46 стран мира, включая США и развитые европейские страны, где она известна как один из лидеров технологий.',
-          paragraph5: 'Продукция экспортируется более чем в 46 стран мира, включая: США, Канаду, Германию, Австралию, Испанию, Великобританию, Россию, Нидерланды, Норвегию, Швецию, Австрию, Новую Зеландию, Южную Корею, Турцию, Малайзию, Таиланд, Филиппины, Украину, Армению, Азербайджан, Грузию, Казахстан, Кыргызстан, Таджикистан, Афганистан, Туркменистан, Узбекистан, Пакистан, Оман, Ирак, Ливан, Бахрейн, Саудовскую Аравию, ОАЭ и другие.'
+          paragraph5: 'Продукция экспортируется более чем в 46 стран мира, включая, Канаду, Германию, Австралию, Испанию, Великобританию, Россию, Нидерланды, Норвегию, Швецию, Австрию, Новую Зеландию, Южную Корею, Турцию, Малайзию, Таиланд, Филиппины, Украину, Армению, Азербайджан, Грузию, Казахстан, Кыргызстан, Таджикистан, Афганистан, Туркменистан, Узбекистан, Пакистан, Оман, Ирак, Ливан, Бахрейн, Саудовскую Аравию, ОАЭ и другие.'
         },
         highlight: {
           body: 'Как один из старейших и наиболее авторитетных производителей хлебопекарного оборудования, Mashhad Baking Industries предлагает в Иране самый широкий ассортимент моделей хлебопекарных машин. Мы выпускаем множество моделей с разной производительностью и оснащением для различных видов выпечки — от печей для барбари, тафтуна, лаваша до сангака — чтобы каждая пекарня, от традиционной до полу-промышленной, могла выбрать оптимальное решение.',
@@ -1283,7 +1280,7 @@ export const messages: Messages = {
         },
         policy: {
           title: 'Политика компании',
-          body: 'Для производства хлебопекарных машин, повышения качества продукции, удовлетворения требований клиентов и законодательства и постоянного улучшения, Mashhad Baking Industries разработала систему менеджмента качества на основе ISO 9001:2008 и привержена ее выполнению и постоянному совершенствованию. В рамках этой системы и подхода мы используем все возможности, обучаем и применяем опытные кадры, выявляем и контролируем все процессы, влияющие на качество, обеспечивая удовлетворенность клиентов на каждом уровне. Одновременно одним из ключевых направлений является преобразование идей в продукт, синергия науки и бизнеса (коммерциализация знаний), поддержка исследовательских разработок и продвижение инноваций для повышения эффективности хлебопекарных машин.',
+          body: 'Для производства хлебопекарных машин, повышения качества продукции, удовлетворения требований клиентов и законодательства и постоянного улучшения, Mashhad Baking Industries разработала систему менеджмента качества на основе ISO 9001 и привержена ее выполнению и постоянному совершенствованию. В рамках этой системы и подхода мы используем все возможности, обучаем и применяем опытные кадры, выявляем и контролируем все процессы, влияющие на качество, обеспечивая удовлетворенность клиентов на каждом уровне. Одновременно одним из ключевых направлений является преобразование идей в продукт, синергия науки и бизнеса (коммерциализация знаний), поддержка исследовательских разработок и продвижение инноваций для повышения эффективности хлебопекарных машин.',
           leaders: {
             ceo: {
               name: 'Абольгасем Эшак Абади',
@@ -1326,31 +1323,31 @@ export const messages: Messages = {
           factory: {
             title: 'Завод и сервис после продажи',
             addressLabel: 'Адрес',
-            address: 'Мешхед, Азиатское шоссе, км 22, начало дороги Мохаммад-Абад Каэм-Магам, индекс: 9359174799',
+            address: 'Мешхед, Азиатское шоссе, км 22, начало дороги Мохаммад-Абад Каэм-Магам, индекс',
             phoneLabel: 'Телефон',
             phone: '05132464090',
             faxLabel: 'Факс',
             fax: '05132464090',
             hoursLabel: 'Часы работы',
-            hours: 'Сб–Ср (кроме праздников) 07:30–17:00'
+            hours: 'Сб–Ср (кроме праздников) 07–17'
           },
           headOffice: {
             title: 'Главный офис',
             addressLabel: 'Адрес',
-            address: 'Мешхед, ул. Малек-о Шоара Бахар, между Бахар 12 и 14, дом 579, индекс: 9173675156',
+            address: 'Мешхед, ул. Малек-о Шоара Бахар, между Бахар 12 и 14, дом 579, индекс',
             phoneLabel: 'Телефон',
             phone: '05138583180',
             faxLabel: 'Факс',
             fax: '05138583189',
             hoursLabel: 'Часы работы',
-            hours: 'Сб–Чт (кроме праздников) 08:00–20:00'
+            hours: 'Сб–Чт (кроме праздников) 08–20'
           },
           rnd: {
             title: 'Центр исследований и разработок',
             addressLabel: 'Адрес',
             address: 'Мешхед, ул. Вакилабад, Университет Фердоуси, Парк науки и технологий, здание Chamran',
             hoursLabel: 'Часы работы',
-            hours: 'Сб–Чт (кроме праздников) 08:00–14:00'
+            hours: 'Сб–Чт (кроме праздников) 08–14'
           }
         },
         links: {
@@ -1405,6 +1402,8 @@ export const messages: Messages = {
   }
 }
 
-export function isLocale(value: string): value is Locale {
+function isLocale(value) {
   return value === 'fa' || value === 'en' || value === 'ru'
 }
+
+export { messages }
