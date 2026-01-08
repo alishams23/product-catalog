@@ -8,10 +8,10 @@ definePageMeta({
   <div>
     <LandingHeroSection />
     <LandingProductCategoriesSection />
-    <LandingOvenCategoriesSection />
     <LandingServicesSection />
-    <LandingFeaturedProductsSection />
+    <LandingOvenCategoriesSection />
     <LandingCertificatesSection />
+    <LandingFeaturedProductsSection />
     <LandingVideoTeaserSection />
     <LandingBlogSection />
   </div>

@@ -153,7 +153,7 @@ export const messages: Messages = {
         }
       },
       ovenCategories: {
-        heading: 'دسته بندی فرهای پخت',
+        heading: 'گروه‌های اصلی محصولات',
         items: {
           bakery: 'دستگاه نانوایی',
           lavash: 'دستگاه لواش',
@@ -623,7 +623,7 @@ export const messages: Messages = {
         }
       },
       ovenCategories: {
-        heading: 'Oven categories',
+        heading: 'Main product groups',
         items: {
           bakery: 'Bakery ovens',
           lavash: 'Lavash ovens',
@@ -1093,7 +1093,7 @@ export const messages: Messages = {
         }
       },
       ovenCategories: {
-        heading: 'Категории печей',
+        heading: 'Основные группы продукции',
         items: {
           bakery: 'Хлебопекарные печи',
           lavash: 'Печи для лаваша',

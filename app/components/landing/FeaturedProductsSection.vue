@@ -7,6 +7,22 @@ type FeaturedProduct = {
   image: string
 }
 
+type ProductsResponse = {
+  page: number
+  items: Array<{
+    title: string
+    href: string
+    image: string
+    slug: string
+  }>
+  hasNext: boolean
+  sections: Array<{
+    title: string
+    description?: string
+    items: FeaturedProduct[]
+  }>
+}
+
 const { t, localePath } = useTranslations()
 
 const fallbackProducts = computed<FeaturedProduct[]>(() => [
@@ -32,27 +48,40 @@ const fallbackProducts = computed<FeaturedProduct[]>(() => [
   }
 ])
 
-const { data: remoteProducts } = await useFetch<FeaturedProduct[]>('/api/featured-products', {
-  default: () => []
+const { data: productsData, error: productsError } = await useFetch<ProductsResponse>('/api/products', {
+  query: { is_featured: 'true', page_size: 12 },
+  default: () => ({ page: 1, items: [], hasNext: false, sections: [] })
 })
 
-const products = computed(() => remoteProducts.value.length ? remoteProducts.value : fallbackProducts.value)
-const baseLength = computed(() => products.value.length)
-const items = computed(() => {
-  const base = products.value
-  return base.length ? [...base, ...base, ...base] : []
+const apiProducts = computed<FeaturedProduct[]>(() =>
+  (productsData.value?.items ?? [])
+    .filter((item) => item.title && item.image)
+    .map((item) => ({
+      title: item.title,
+      href: item.href || `/products/${encodeURIComponent(item.slug)}`,
+      image: item.image
+    }))
+)
+
+const products = computed(() => {
+  if (apiProducts.value.length) return apiProducts.value
+  if (productsError.value) return fallbackProducts.value
+  return []
 })
+const items = computed(() => products.value)
 const resolvedItems = computed(() =>
   items.value.map((item) => {
     const href = toProductRoute(item.href)
-    return { ...item, resolvedHref: href, isInternal: href.startsWith('/') }
+    const isInternal = href.startsWith('/')
+    const resolvedHref = isInternal ? localePath(href) : href
+    return { ...item, resolvedHref, isInternal }
   })
 )
+const shouldCenter = computed(() => resolvedItems.value.length <= 3)
 
 const scroller = ref<HTMLDivElement | null>(null)
 const slideRefs = ref<HTMLElement[]>([])
 const activeIndex = ref(0)
-const isJumping = ref(false)
 let rafId = 0
 let wheelAccum = 0
 let wheelLocked = false
@@ -82,7 +111,8 @@ function toProductRoute(href: string): string {
 
 function scrollToIndex(index: number, behavior: ScrollBehavior = 'smooth') {
   const container = scroller.value
-  const el = slideRefs.value[index]
+  const target = Math.max(0, Math.min(index, slideRefs.value.length - 1))
+  const el = slideRefs.value[target]
   if (!container || !el) return
 
   const containerRect = container.getBoundingClientRect()
@@ -95,7 +125,7 @@ function scrollToIndex(index: number, behavior: ScrollBehavior = 'smooth') {
 
 function onWheel(e: WheelEvent) {
   const container = scroller.value
-  if (!container || isJumping.value) return
+  if (!container || resolvedItems.value.length <= 1) return
 
   const dominant = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX
   if (!dominant) return
@@ -142,26 +172,6 @@ function updateActive() {
   }
 
   activeIndex.value = bestIndex
-
-  if (isJumping.value) return
-  const n = baseLength.value
-  if (!n) return
-
-  if (bestIndex < n) {
-    isJumping.value = true
-    scrollToIndex(bestIndex + n, 'auto')
-    activeIndex.value = bestIndex + n
-    requestAnimationFrame(() => {
-      isJumping.value = false
-    })
-  } else if (bestIndex >= 2 * n) {
-    isJumping.value = true
-    scrollToIndex(bestIndex - n, 'auto')
-    activeIndex.value = bestIndex - n
-    requestAnimationFrame(() => {
-      isJumping.value = false
-    })
-  }
 }
 
 function onScroll() {
@@ -169,10 +179,10 @@ function onScroll() {
   rafId = requestAnimationFrame(updateActive)
 }
 
-watch(baseLength, async (len) => {
-  if (!import.meta.client || !len) return
+watch(resolvedItems, async (list) => {
+  if (!import.meta.client || !list.length) return
   await nextTick()
-  scrollToIndex(len, 'auto')
+  scrollToIndex(0, 'auto')
   updateActive()
 }, { immediate: true })
 
@@ -196,40 +206,73 @@ onBeforeUnmount(() => {
         <div
           ref="scroller"
           class="featured-scroll flex gap-4 overflow-x-auto pb-5 pt-3 [-webkit-overflow-scrolling:touch] snap-x snap-mandatory cursor-grab active:cursor-grabbing"
+          :class="shouldCenter ? 'justify-center' : ''"
           @scroll.passive="onScroll"
           @wheel="onWheel"
         >
-          <component
-            v-for="(p, i) in resolvedItems"
-            :key="`${p.href}-${i}`"
-            :ref="setSlideRef"
-            class="group relative flex w-[210px] shrink-0 snap-center flex-col overflow-hidden rounded-[30px] bg-zinc-50 ring-1 ring-black/5 transition duration-300 hover:shadow-md sm:w-[230px]"
-            :class="i === activeIndex ? 'z-10 scale-[1.04] shadow-md' : 'scale-[0.97] opacity-90'"
-            :is="p.isInternal ? 'NuxtLink' : 'a'"
-            v-bind="p.isInternal ? { to: p.resolvedHref } : { href: p.resolvedHref, target: '_blank', rel: 'noopener' }"
-          >
-            <div class="p-4">
-              <div class="overflow-hidden rounded-[20%] bg-white">
-                <NuxtImg :src="p.image" :alt="p.title" class="h-36 w-full object-contain" />
-              </div>
-            </div>
-            <div
-              class="px-3 py-3 text-center transition-colors"
-              :class="i === activeIndex ? 'bg-[#2a2a2b]' : 'bg-zinc-500 group-hover:bg-[#2a2a2b]'"
+          <template v-for="(p, i) in resolvedItems" :key="`${p.href}-${i}`">
+            <NuxtLink
+              v-if="p.isInternal"
+              :ref="setSlideRef"
+              class="group relative flex w-[210px] shrink-0 snap-center flex-col overflow-hidden rounded-[30px] bg-zinc-50 ring-1 ring-black/5 transition duration-300 hover:shadow-md sm:w-[230px]"
+              :class="i === activeIndex ? 'z-10 scale-[1.04] shadow-md' : 'scale-[0.97] opacity-90'"
+              :to="p.resolvedHref"
             >
-              <p class="text-sm font-semibold text-white leading-6">
-                {{ p.title }}
-              </p>
-              <div class="mt-3">
-                <span
-                  class="inline-flex rounded-full px-4 py-2 text-xs font-semibold text-white transition-colors"
-                  :class="i === activeIndex ? 'bg-amber-500' : 'bg-[#e2bf8c] group-hover:bg-amber-500'"
-                >
-                  {{ t('home.featured.cta') }}
-                </span>
+              <div class="p-4">
+                <div class="overflow-hidden rounded-[20%] bg-white">
+                  <NuxtImg :src="p.image" :alt="p.title" class="h-36 w-full object-contain" />
+                </div>
               </div>
-            </div>
-          </component>
+              <div
+                class="px-3 py-3 text-center transition-colors"
+                :class="i === activeIndex ? 'bg-[#2a2a2b]' : 'bg-zinc-500 group-hover:bg-[#2a2a2b]'"
+              >
+                <p class="text-sm font-semibold text-white leading-6">
+                  {{ p.title }}
+                </p>
+                <div class="mt-3">
+                  <span
+                    class="inline-flex rounded-full px-4 py-2 text-xs font-semibold text-white transition-colors"
+                    :class="i === activeIndex ? 'bg-amber-500' : 'bg-[#e2bf8c] group-hover:bg-amber-500'"
+                  >
+                    {{ t('home.featured.cta') }}
+                  </span>
+                </div>
+              </div>
+            </NuxtLink>
+
+            <a
+              v-else
+              :ref="setSlideRef"
+              class="group relative flex w-[210px] shrink-0 snap-center flex-col overflow-hidden rounded-[30px] bg-zinc-50 ring-1 ring-black/5 transition duration-300 hover:shadow-md sm:w-[230px]"
+              :class="i === activeIndex ? 'z-10 scale-[1.04] shadow-md' : 'scale-[0.97] opacity-90'"
+              :href="p.resolvedHref"
+              target="_blank"
+              rel="noopener"
+            >
+              <div class="p-4">
+                <div class="overflow-hidden rounded-[20%] bg-white">
+                  <NuxtImg :src="p.image" :alt="p.title" class="h-36 w-full object-contain" />
+                </div>
+              </div>
+              <div
+                class="px-3 py-3 text-center transition-colors"
+                :class="i === activeIndex ? 'bg-[#2a2a2b]' : 'bg-zinc-500 group-hover:bg-[#2a2a2b]'"
+              >
+                <p class="text-sm font-semibold text-white leading-6">
+                  {{ p.title }}
+                </p>
+                <div class="mt-3">
+                  <span
+                    class="inline-flex rounded-full px-4 py-2 text-xs font-semibold text-white transition-colors"
+                    :class="i === activeIndex ? 'bg-amber-500' : 'bg-[#e2bf8c] group-hover:bg-amber-500'"
+                  >
+                    {{ t('home.featured.cta') }}
+                  </span>
+                </div>
+              </div>
+            </a>
+          </template>
         </div>
       </div>
     </div>

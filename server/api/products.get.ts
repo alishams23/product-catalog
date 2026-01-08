@@ -44,6 +44,7 @@ type ApiProductListItem = {
   title: string
   slug: string
   short_description?: string
+  hero_image?: string
   primary_image?: string | { url?: string; alt_text?: string }
   categories?: ApiCategory[]
   is_featured?: boolean
@@ -111,7 +112,7 @@ const handler = async (event: H3Event) => {
     title: item.title ?? '',
     href: `/products/${encodeURIComponent(item.slug ?? '')}`,
     image: (() => {
-      const url = coerceImageUrl(item.primary_image)
+      const url = item.hero_image || coerceImageUrl(item.primary_image)
       if (!url || isVideoUrl(url)) return ''
       return url
     })(),

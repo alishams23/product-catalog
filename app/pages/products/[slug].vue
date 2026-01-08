@@ -1104,12 +1104,12 @@ useSeoMeta({
         <div class="mt-8 grid items-start gap-10 lg:grid-cols-12">
           <div class="order-2 flex justify-center lg:order-1 lg:col-span-6 lg:justify-start">
             <div v-if="productImages.length" class="w-full max-w-xl">
-              <div class="overflow-hidden rounded-[28px] bg-white shadow-[0_18px_45px_rgba(0,0,0,0.12)]">
+              <div class="overflow-hidden rounded-[28px] shadow-[0_18px_45px_rgba(0,0,0,0.12)]">
                 <NuxtImg
                   v-if="activeImage"
                   :src="activeImage"
                   :alt="data?.heroAlt || data?.title || heroTitle"
-                  class="w-full object-contain"
+                  class="w-full object-contain mix-blend-multiply"
                   sizes="(max-width: 768px) 100vw, 520px"
                   loading="eager"
                 />
@@ -1120,7 +1120,7 @@ useSeoMeta({
                   v-for="(image, index) in productImages"
                   :key="`${image}-${index}`"
                   type="button"
-                  class="group relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-white transition"
+                  class="group relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl transition"
                   :class="index === activeImageIndex ? 'ring-2 ring-amber-500' : 'ring-1 ring-zinc-200 hover:ring-amber-300'"
                   :aria-pressed="index === activeImageIndex"
                   :aria-label="`${heroTitle} ${index + 1}`"
@@ -1130,7 +1130,7 @@ useSeoMeta({
                   <NuxtImg
                     :src="image"
                     :alt="data?.heroAlt || data?.title || heroTitle"
-                    class="h-full w-full object-contain"
+                    class="h-full w-full object-contain mix-blend-multiply"
                     sizes="80px"
                     :loading="index < 4 ? 'eager' : 'lazy'"
                   />
