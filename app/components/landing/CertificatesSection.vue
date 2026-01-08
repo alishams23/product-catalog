@@ -16,50 +16,48 @@ const iconItems = computed(() => items.value.filter((item) => item.variant === '
 </script>
 
 <template>
-  <section class="pt-0">
-    <header class="bg-[linear-gradient(180deg,#c8a35f_0%,#b48a47_55%,#9a6c2d_100%)]">
-      <div class="mx-auto max-w-6xl px-4 py-10 text-center">
-        <h2 class="text-3xl font-black tracking-tight text-zinc-900 [text-shadow:0_2px_0_rgba(0,0,0,0.12)] sm:text-4xl">
+  <section class="py-12 bg-zinc-50/70">
+    <div class="mx-auto w-full max-w-7xl px-4">
+      <div class="relative overflow-hidden rounded-3xl bg-white px-6 py-10 text-center shadow-[0_18px_60px_rgba(15,23,42,0.12)] ring-1 ring-black/5 sm:px-10">
+        <div class="absolute inset-x-0 top-0 h-1 bg-amber-500" />
+        <h2 class="text-2xl font-black tracking-tight text-zinc-900 sm:text-3xl">
           {{ t('home.certificates.title') }}
         </h2>
-        <p class="mt-3 text-2xl font-medium tracking-[0.08em] text-black/70 [text-shadow:0_1px_0_rgba(255,255,255,0.35)] sm:text-3xl">
+        <p class="mt-3 text-sm font-semibold tracking-[0.16em] text-zinc-500 sm:text-base">
           {{ t('home.certificates.subtitle') }}
         </p>
+        <div class="mx-auto mt-5 h-1 w-14 rounded-full bg-amber-500/80" />
       </div>
-    </header>
 
-    <div class="h-2 w-full bg-[#f89014]" />
-
-    <div class="bg-[radial-gradient(circle_at_top,#f5f5f5_0%,#e3e3e3_48%,#d2d2d2_100%)] shadow-[inset_0_40px_80px_rgba(0,0,0,0.18)]">
-      <div class="mx-auto max-w-6xl px-4 py-14 sm:py-16">
-        <p class="mx-auto max-w-4xl text-center text-sm leading-8 text-zinc-800 hidden sm:block">
+      <div class="mt-10 rounded-3xl bg-white/85 px-4 py-10 shadow-[0_24px_70px_rgba(0,0,0,0.08)] ring-1 ring-black/5 sm:px-10 sm:py-12">
+        <p class="mx-auto max-w-4xl text-center text-sm leading-8 text-zinc-700 hidden sm:block">
           {{ t('home.certificates.description') }}
         </p>
 
         <div class="mt-10 sm:hidden">
           <div v-if="certificateItem" class="flex flex-col items-center text-center">
-            <div class="w-full max-w-[260px] rounded-lg bg-white p-2 shadow-[0_8px_20px_rgba(0,0,0,0.12)] ring-1 ring-black/10">
+            <div class="w-full max-w-[320px] rounded-xl border border-zinc-200/80 bg-white p-2">
               <NuxtImg
                 :src="certificateItem.image"
                 :alt="certificateItem.title"
-                class="h-[150px] w-full object-contain"
+                class="h-[170px] w-full object-contain"
               />
             </div>
-            <p class="mt-6 text-lg font-black text-zinc-900">
+            <p class="mt-5 text-base font-black text-zinc-900">
               {{ certificateItem.title }}
             </p>
           </div>
 
-          <div class="mt-10 grid grid-cols-3 gap-x-6 gap-y-8">
+          <div class="mt-8 grid grid-cols-3 gap-x-8 gap-y-10">
             <div v-for="item in iconItems" :key="item.title" class="flex flex-col items-center text-center">
-              <div class="flex h-20 w-20 items-center justify-center">
+              <div class="flex h-16 w-16 items-center justify-center">
                 <NuxtImg
                   :src="item.image"
                   :alt="item.title"
                   class="h-full w-full object-contain opacity-80 grayscale"
                 />
               </div>
-              <p class="mt-3 text-xs font-semibold text-zinc-900">
+              <p class="mt-3 text-xs font-semibold text-zinc-700">
                 {{ item.title }}
               </p>
             </div>
