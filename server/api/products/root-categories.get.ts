@@ -14,10 +14,25 @@ type RootCategory = {
   }>
 }
 
-const API_BASE_URL = 'http://156.236.31.140:8001'
-
 const handler = async () => {
-  const res = await fetch(`${API_BASE_URL}/api/products/root-categories/`)
+  const { apiBaseUrl } = useRuntimeConfig()
+  if (!apiBaseUrl) {
+    throw createError({
+      statusCode: 500,
+      statusMessage: 'API base URL is not configured. Set NUXT_API_BASE_URL.'
+    })
+  }
+
+  const url = `${apiBaseUrl.replace(/\/$/, '')}/api/products/root-categories/`
+  let res: Response
+  try {
+    res = await fetch(url)
+  } catch (error) {
+    throw createError({
+      statusCode: 502,
+      statusMessage: `Root categories API fetch failed (${error instanceof Error ? error.message : 'network error'})`
+    })
+  }
 
   if (!res.ok) {
     throw createError({

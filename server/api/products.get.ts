@@ -58,8 +58,6 @@ type ApiListResponse = {
   results: ApiProductListItem[]
 }
 
-const API_BASE_URL = 'http://156.236.31.140:8001'
-
 function isVideoUrl(url: string): boolean {
   return /\.(mp4|webm|mov|m4v)(\?.*)?$/i.test(url)
 }
@@ -84,6 +82,14 @@ function appendQuery(params: URLSearchParams, key: string, value: unknown) {
 }
 
 const handler = async (event: H3Event) => {
+  const { apiBaseUrl } = useRuntimeConfig()
+  if (!apiBaseUrl) {
+    throw createError({
+      statusCode: 500,
+      statusMessage: 'API base URL is not configured. Set NUXT_API_BASE_URL.'
+    })
+  }
+
   const query = getQuery(event)
   const rawPage = Array.isArray(query.page) ? query.page[0] : query.page
   const page = Math.max(1, Number.parseInt(String(rawPage ?? '1'), 10) || 1)
@@ -97,8 +103,16 @@ const handler = async (event: H3Event) => {
   appendQuery(params, 'search', Array.isArray(query.search) ? query.search[0] : query.search)
   appendQuery(params, 'ordering', Array.isArray(query.ordering) ? query.ordering[0] : query.ordering)
 
-  const url = `${API_BASE_URL}/api/products/?${params.toString()}`
-  const res = await fetch(url)
+  const url = `${apiBaseUrl.replace(/\/$/, '')}/api/products/?${params.toString()}`
+  let res: Response
+  try {
+    res = await fetch(url)
+  } catch (error) {
+    throw createError({
+      statusCode: 502,
+      statusMessage: `Product API fetch failed (${error instanceof Error ? error.message : 'network error'})`
+    })
+  }
 
   if (!res.ok) {
     throw createError({

@@ -9,9 +9,15 @@ type CategoryDetail = {
   description?: string
 }
 
-const API_BASE_URL = 'http://156.236.31.140:8001'
-
 const handler = async (event: H3Event) => {
+  const { apiBaseUrl } = useRuntimeConfig()
+  if (!apiBaseUrl) {
+    throw createError({
+      statusCode: 500,
+      statusMessage: 'API base URL is not configured. Set NUXT_API_BASE_URL.'
+    })
+  }
+
   const slug = getRouterParam(event, 'slug') ?? ''
 
   if (!slug) {
@@ -21,8 +27,16 @@ const handler = async (event: H3Event) => {
     })
   }
 
-  const url = `${API_BASE_URL}/api/products/categories/${encodeURIComponent(slug)}/`
-  const res = await fetch(url)
+  const url = `${apiBaseUrl.replace(/\/$/, '')}/api/products/categories/${encodeURIComponent(slug)}/`
+  let res: Response
+  try {
+    res = await fetch(url)
+  } catch (error) {
+    throw createError({
+      statusCode: 502,
+      statusMessage: `Category API fetch failed (${error instanceof Error ? error.message : 'network error'})`
+    })
+  }
 
   if (!res.ok) {
     throw createError({

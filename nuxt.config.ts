@@ -9,6 +9,21 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
+  runtimeConfig: {
+    apiBaseUrl: 'http://156.236.31.140:8001'
+  },
+
+  fonts: {
+    providers: {
+      adobe: false,
+      bunny: false,
+      fontshare: false,
+      fontsource: false,
+      google: false,
+      googleicons: false
+    }
+  },
+
   image: {
     domains: ['mbico.ir'],
     screens: {

@@ -1,5 +1,5 @@
 import { messages } from '~/i18n/messages'
-import { useLocale } from '~/composables/useLocale'
+import { useAppLocale } from '~/composables/useAppLocale'
 
 type Params = Record<string, string | number>
 
@@ -21,7 +21,7 @@ function interpolate(text: string, params?: Params): string {
 }
 
 export function useTranslations() {
-  const { locale, dir, isRtl, localePath, switchLocalePath } = useLocale()
+  const { locale, dir, isRtl, localePath, switchLocalePath } = useAppLocale()
   const dictionary = computed(() => messages[locale.value] ?? messages.fa)
 
   const t = (key: string, params?: Params) => {

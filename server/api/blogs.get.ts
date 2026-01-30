@@ -16,10 +16,25 @@ type BlogListItem = {
   published_at?: string | null
 }
 
-const API_BASE_URL = 'http://156.236.31.140:8001'
-
 const handler = async (_event: H3Event) => {
-  const res = await fetch(`${API_BASE_URL}/api/blogs/`)
+  const { apiBaseUrl } = useRuntimeConfig()
+  if (!apiBaseUrl) {
+    throw createError({
+      statusCode: 500,
+      statusMessage: 'API base URL is not configured. Set NUXT_API_BASE_URL.'
+    })
+  }
+
+  const url = `${apiBaseUrl.replace(/\/$/, '')}/api/blogs/`
+  let res: Response
+  try {
+    res = await fetch(url)
+  } catch (error) {
+    throw createError({
+      statusCode: 502,
+      statusMessage: `Blog API fetch failed (${error instanceof Error ? error.message : 'network error'})`
+    })
+  }
 
   if (!res.ok) {
     throw createError({

@@ -1,0 +1,735 @@
+openapi: 3.0.3
+info:
+  title: Product Catalog API
+  version: 1.0.0
+  description: API documentation for the Product Catalog service.
+paths:
+  /api/blogs/:
+    get:
+      operationId: blogs_list
+      tags:
+      - blogs
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BlogList'
+          description: ''
+  /api/blogs/{slug}/:
+    get:
+      operationId: blogs_retrieve
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - blogs
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlogDetail'
+          description: ''
+  /api/blogs/root-categories/:
+    get:
+      operationId: blogs_root_categories_list
+      tags:
+      - blogs
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RootCategory'
+          description: ''
+  /api/contact/:
+    post:
+      operationId: contact_create
+      tags:
+      - contact
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactMessage'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ContactMessage'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ContactMessage'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactMessage'
+          description: ''
+  /api/products/:
+    get:
+      operationId: products_list
+      parameters:
+      - in: query
+        name: category
+        schema:
+          type: string
+      - in: query
+        name: category_id
+        schema:
+          type: integer
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: root_category
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - products
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedProductListList'
+          description: ''
+  /api/products/{slug}/:
+    get:
+      operationId: products_retrieve
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - products
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDetail'
+          description: ''
+  /api/products/categories/:
+    get:
+      operationId: products_categories_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - products
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCategoryListList'
+          description: ''
+  /api/products/categories/{slug}/:
+    get:
+      operationId: products_categories_retrieve
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - products
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryDetail'
+          description: ''
+  /api/products/create/:
+    post:
+      operationId: products_create_create
+      tags:
+      - products
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProductCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProductCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductCreate'
+          description: ''
+  /api/products/root-categories/:
+    get:
+      operationId: products_root_categories_list
+      tags:
+      - products
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RootCategoryList'
+          description: ''
+components:
+  schemas:
+    BlogDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 200
+        slug:
+          type: string
+          maxLength: 220
+          pattern: ^[-a-zA-Z0-9_]+$
+        image:
+          type: string
+          readOnly: true
+        excerpt:
+          type: string
+        body:
+          type: string
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+          readOnly: true
+        published_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - categories
+      - id
+      - image
+      - slug
+      - title
+    BlogList:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 200
+        slug:
+          type: string
+          maxLength: 220
+          pattern: ^[-a-zA-Z0-9_]+$
+        image:
+          type: string
+          readOnly: true
+        excerpt:
+          type: string
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+          readOnly: true
+        published_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - categories
+      - id
+      - image
+      - slug
+      - title
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 120
+        slug:
+          type: string
+          maxLength: 140
+          pattern: ^[-a-zA-Z0-9_]+$
+      required:
+      - id
+      - name
+      - slug
+    CategoryDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+        slug:
+          type: string
+          maxLength: 140
+          pattern: ^[-a-zA-Z0-9_]+$
+        image:
+          type: string
+          readOnly: true
+        short_description:
+          type: string
+        description:
+          type: string
+      required:
+      - id
+      - image
+      - slug
+      - title
+    CategoryList:
+      type: object
+      properties:
+        title:
+          type: string
+        image:
+          type: string
+          readOnly: true
+      required:
+      - image
+      - title
+    ContactMessage:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        full_name:
+          type: string
+          maxLength: 255
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        phone:
+          type: string
+          maxLength: 50
+        subject:
+          type: string
+          maxLength: 255
+        message:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - email
+      - full_name
+      - id
+      - message
+      - phone
+      - subject
+    PaginatedCategoryListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoryList'
+    PaginatedProductListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductList'
+    ProductCreate:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Public product name.
+          maxLength: 220
+        slug:
+          type: string
+          description: Used in product detail URL.
+          maxLength: 240
+          pattern: ^[-a-zA-Z0-9_]+$
+        short_description:
+          type: string
+          description: Short summary.
+        description:
+          type: string
+          description: Quill rich text content.
+        hero_image:
+          type: string
+          format: uri
+          nullable: true
+          description: Hero image (optional).
+        hero_video:
+          type: string
+          format: uri
+          nullable: true
+          description: Hero video (optional).
+        categories:
+          type: array
+          items:
+            type: integer
+        gallery_images:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductGalleryImageCreate'
+        faq_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductFaqItem'
+        spec_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductSpecItem'
+      required:
+      - slug
+      - title
+    ProductDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          description: Public product name.
+          maxLength: 220
+        slug:
+          type: string
+          description: Used in product detail URL.
+          maxLength: 240
+          pattern: ^[-a-zA-Z0-9_]+$
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+          readOnly: true
+        short_description:
+          type: string
+          description: Short summary.
+        description:
+          type: string
+          description: Quill rich text content.
+        hero_image:
+          type: string
+          readOnly: true
+        hero_video:
+          type: string
+          readOnly: true
+        gallery_images:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductGalleryImage'
+          readOnly: true
+        faq_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductFaqItem'
+          readOnly: true
+        spec_table:
+          type: string
+          readOnly: true
+      required:
+      - categories
+      - faq_items
+      - gallery_images
+      - hero_image
+      - hero_video
+      - id
+      - slug
+      - spec_table
+      - title
+    ProductFaqItem:
+      type: object
+      properties:
+        question:
+          type: string
+          description: FAQ question.
+          maxLength: 240
+        answer:
+          type: string
+          description: FAQ answer text/HTML.
+        sort_order:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          description: Controls ordering.
+      required:
+      - question
+    ProductGalleryImage:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        url:
+          type: string
+          readOnly: true
+        alt_text:
+          type: string
+          description: Alt text.
+          maxLength: 200
+        sort_order:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          description: Controls ordering.
+      required:
+      - id
+      - url
+    ProductGalleryImageCreate:
+      type: object
+      properties:
+        image:
+          type: string
+          format: uri
+          description: Gallery image.
+        alt_text:
+          type: string
+          description: Alt text.
+          maxLength: 200
+        sort_order:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          description: Controls ordering.
+      required:
+      - image
+    ProductList:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          description: Public product name.
+          maxLength: 220
+        slug:
+          type: string
+          description: Used in product detail URL.
+          maxLength: 240
+          pattern: ^[-a-zA-Z0-9_]+$
+        short_description:
+          type: string
+          description: Short summary.
+        hero_image:
+          type: string
+          readOnly: true
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+          readOnly: true
+      required:
+      - categories
+      - hero_image
+      - id
+      - slug
+      - title
+    ProductSpecItem:
+      type: object
+      properties:
+        variant_name:
+          type: string
+          description: Column title (e.g. model name).
+          maxLength: 120
+        label:
+          type: string
+          description: Row label.
+          maxLength: 200
+        value:
+          type: string
+          description: Cell value.
+          maxLength: 300
+        sort_order:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          description: Controls ordering.
+      required:
+      - label
+      - variant_name
+    RootCategory:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 120
+        slug:
+          type: string
+          maxLength: 140
+          pattern: ^[-a-zA-Z0-9_]+$
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+          readOnly: true
+      required:
+      - categories
+      - id
+      - name
+      - slug
+    RootCategoryList:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 120
+        slug:
+          type: string
+          maxLength: 140
+          pattern: ^[-a-zA-Z0-9_]+$
+        image:
+          type: string
+          readOnly: true
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+          readOnly: true
+      required:
+      - categories
+      - id
+      - image
+      - name
+      - slug
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
+

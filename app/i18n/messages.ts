@@ -247,9 +247,23 @@ export const messages: Messages = {
       },
       catalogLabel: 'کاتالوگ',
       noDetails: 'جزئیات این محصول به زودی تکمیل می‌شود.',
+      fullDescription: 'توضیحات کامل',
       loading: 'در حال دریافت اطلاعات محصول...',
       error: 'دریافت اطلاعات محصول با خطا مواجه شد. دوباره تلاش کنید.',
       downloadCatalog: 'دانلود کاتالوگ',
+      specTable: {
+        title: 'مدل ها و مشخصات فنی',
+        rowLabel: 'مشخصات'
+      },
+      callToBuy: {
+        title: 'برای خرید و مشاوره تماس بگیرید',
+        description: 'کارشناسان فروش آماده پاسخ گویی و ثبت سفارش هستند.',
+        primary: 'تماس مستقیم',
+        secondary: 'فرم تماس'
+      },
+      related: {
+        title: 'محصولات مرتبط'
+      },
       video: {
         prev: 'ویدیو قبلی',
         next: 'ویدیو بعدی',
@@ -717,9 +731,23 @@ export const messages: Messages = {
       },
       catalogLabel: 'Catalog',
       noDetails: 'Product details will be updated soon.',
+      fullDescription: 'Full description',
       loading: 'Loading product details...',
       error: 'Failed to load product details. Please try again.',
       downloadCatalog: 'Download catalog',
+      specTable: {
+        title: 'Models and technical specifications',
+        rowLabel: 'Specification'
+      },
+      callToBuy: {
+        title: 'Call to purchase and consultation',
+        description: 'Our sales team is ready to answer questions and place orders.',
+        primary: 'Call now',
+        secondary: 'Contact form'
+      },
+      related: {
+        title: 'Related products'
+      },
       video: {
         prev: 'Previous video',
         next: 'Next video',
@@ -1187,9 +1215,23 @@ export const messages: Messages = {
       },
       catalogLabel: 'Каталог',
       noDetails: 'Описание продукта будет добавлено позже.',
+      fullDescription: 'Полное описание',
       loading: 'Загрузка данных продукта...',
       error: 'Не удалось загрузить данные продукта. Попробуйте снова.',
       downloadCatalog: 'Скачать каталог',
+      specTable: {
+        title: 'Модели и технические характеристики',
+        rowLabel: 'Характеристика'
+      },
+      callToBuy: {
+        title: 'Позвоните для покупки и консультации',
+        description: 'Наши специалисты готовы ответить на вопросы и оформить заказ.',
+        primary: 'Позвонить',
+        secondary: 'Форма связи'
+      },
+      related: {
+        title: 'Похожие товары'
+      },
       video: {
         prev: 'Предыдущее видео',
         next: 'Следующее видео',

@@ -3,7 +3,7 @@ definePageMeta({
   hideHeaderAtTop: true
 })
 
-const { t, localePath } = useTranslations()
+const { t, localePath, isRtl } = useTranslations()
 
 type ContentBlock =
   | { type: 'heading'; text: string }
@@ -19,6 +19,11 @@ type VideoSlide = {
   poster?: string
 }
 
+type VideoItem = {
+  url: string
+  title?: string
+}
+
 type CertificatesBlock = {
   type: 'certificates'
   title: string
@@ -31,6 +36,11 @@ type RenderBlock = ContentBlock | CertificatesBlock
 type SpecModel = {
   name: string
   specs: Array<{ label: string; value: string }>
+}
+
+type SpecTable = {
+  columns: string[]
+  rows: Array<{ label: string; values: Record<string, string> }>
 }
 
 type NavItem = {
@@ -51,6 +61,8 @@ type ProductDetail = {
   imageGallery?: readonly string[]
   price?: string
   description?: string
+  fullDescriptionHtml?: string
+  fullDescription?: string
   highlight?: string
   highlightHtml?: string
   summaryHtml?: string
@@ -70,9 +82,12 @@ type ProductDetail = {
   moshakhasatBlocks?: readonly ContentBlock[]
   videoBlocks?: readonly ContentBlock[]
   specModels?: readonly SpecModel[]
+  specTable?: SpecTable
   specDownloadHref?: string
   videoGallery?: readonly string[]
+  videoItems?: readonly VideoItem[]
   faqItems?: readonly FaqItem[]
+  relatedProducts?: readonly RelatedProduct[]
   href: string
 }
 
@@ -101,6 +116,14 @@ type RootCategory = {
   }>
 }
 
+type RelatedProduct = {
+  id?: number
+  title: string
+  slug: string
+  image?: string
+  category?: string
+}
+
 type ApiCategory = {
   id?: number
   name?: string
@@ -118,6 +141,22 @@ type ApiFaqItemV2 = {
   question?: string
   answer?: string
   sort_order?: number
+}
+
+type ApiProductVideo = {
+  id?: number
+  url?: string
+  title?: string
+  sort_order?: number
+}
+
+type ApiRelatedProduct = {
+  id?: number
+  title?: string
+  slug?: string
+  short_description?: string
+  hero_image?: string
+  categories?: ApiCategory[]
 }
 
 type ApiMedia = {
@@ -168,6 +207,14 @@ type ApiSpecModel = {
   sort_order?: number
 }
 
+type ApiSpecTable = {
+  columns?: Array<string | number | null>
+  rows?: Array<{
+    label?: string | null
+    values?: Record<string, string | number | null>
+  }>
+}
+
 type ApiFaqItem = {
   question?: string
   answer_html?: string
@@ -180,10 +227,14 @@ type ApiProductDetail = {
   slug?: string
   short_description?: string
   description?: string
+  full_description?: string
+  full_decription?: string
   hero_image?: string
   hero_video?: string
   gallery_images?: ApiGalleryImage[]
   faq_items?: ApiFaqItemV2[]
+  videos?: ApiProductVideo[]
+  related_products?: ApiRelatedProduct[]
   categories?: ApiCategory[] | number[]
   highlights?: string
   applications?: string
@@ -219,6 +270,7 @@ type ApiProductDetail = {
   nav_items?: ApiNavItem[]
   content_blocks?: ApiContentBlock[]
   spec_models?: ApiSpecModel[]
+  spec_table?: ApiSpecTable | null
   faq_items?: ApiFaqItem[]
   navItems?: NavItem[]
   moarefiBlocks?: ContentBlock[]
@@ -271,12 +323,41 @@ function looksLikeHtml(input: string): boolean {
   return /<[^>]+>/.test(input)
 }
 
+function resolveFullDescription(input: {
+  full_description?: string
+  full_decription?: string
+}): string {
+  const candidates = [input.full_description, input.full_decription]
+  for (const value of candidates) {
+    if (typeof value === 'string' && value.trim()) return value.trim()
+  }
+  return ''
+}
+
 function safeDecodeURIComponent(value: string): string {
   try {
     return decodeURIComponent(value)
   } catch {
     return value
   }
+}
+
+function toTelLink(value: string): string {
+  const map: Record<string, string> = {
+    '۰': '0',
+    '۱': '1',
+    '۲': '2',
+    '۳': '3',
+    '۴': '4',
+    '۵': '5',
+    '۶': '6',
+    '۷': '7',
+    '۸': '8',
+    '۹': '9'
+  }
+  const normalized = value.replace(/[۰-۹]/g, (digit) => map[digit] ?? digit)
+  const digits = normalized.replace(/[^0-9+]/g, '')
+  return digits ? `tel:${digits}` : ''
 }
 
 function extractCategorySlug(href: string | undefined): string {
@@ -383,6 +464,79 @@ function normalizeBlocks(blocks: ContentBlock[] | undefined): ContentBlock[] {
   })
 }
 
+function normalizeSpecTable(input: ApiSpecTable | string | null | undefined): SpecTable | undefined {
+  if (!input) return undefined
+  let table: ApiSpecTable | null = null
+
+  if (typeof input === 'string') {
+    try {
+      table = JSON.parse(input) as ApiSpecTable
+    } catch {
+      return undefined
+    }
+  } else {
+    table = input
+  }
+
+  const rawColumns = Array.isArray(table?.columns)
+    ? table.columns.map((col) => String(col ?? '')).filter(Boolean)
+    : []
+  const columns = rawColumns.map((col) => normalizeText(col)).filter(Boolean)
+  if (!columns.length) return undefined
+
+  const rows = Array.isArray(table?.rows) ? table.rows : []
+  const normalizedRows = rows.map((row) => {
+    if (!row || typeof row !== 'object') return null
+    const label = normalizeText(String(row.label ?? ''))
+    const valuesRaw = row.values && typeof row.values === 'object' ? row.values : {}
+    const values: Record<string, string> = {}
+    rawColumns.forEach((rawCol, index) => {
+      const colLabel = columns[index] || normalizeText(rawCol)
+      const rawValue = (valuesRaw as Record<string, unknown>)[rawCol]
+        ?? (valuesRaw as Record<string, unknown>)[colLabel]
+      values[colLabel] = normalizeText(rawValue === undefined || rawValue === null ? '' : String(rawValue))
+    })
+    return { label, values }
+  }).filter((row): row is { label: string; values: Record<string, string> } =>
+    Boolean(row && (row.label || Object.values(row.values).some(Boolean)))
+  )
+
+  if (!normalizedRows.length) return undefined
+  return { columns, rows: normalizedRows }
+}
+
+function normalizeVideoItems(items: ApiProductVideo[] | undefined, fallbackTitle: string): VideoItem[] {
+  const list = sortByOrder(items ?? [])
+    .map((item) => ({
+      url: normalizeText(item.url ?? ''),
+      title: normalizeText(item.title ?? '')
+    }))
+    .filter((item) => item.url)
+  return list.map((item) => ({
+    url: item.url,
+    title: item.title || fallbackTitle
+  }))
+}
+
+function normalizeRelatedProducts(items: ApiRelatedProduct[] | undefined): RelatedProduct[] {
+  return (items ?? [])
+    .map((item) => {
+      const title = normalizeText(item.title ?? '')
+      const slug = normalizeText(item.slug ?? '')
+      const image = normalizeText(item.hero_image ?? '')
+      const category = normalizeText(item.categories?.[0]?.name ?? '')
+      if (!title || !slug) return null
+      return {
+        id: item.id,
+        title,
+        slug,
+        image: image || undefined,
+        category: category || undefined
+      }
+    })
+    .filter((item): item is RelatedProduct => Boolean(item))
+}
+
 function mapApiV2(api: ApiProductDetail, fallbackSlug: string): ProductDetail {
   const slug = normalizeText(api.slug ?? fallbackSlug)
   const title = normalizeText(api.title ?? slug)
@@ -416,7 +570,12 @@ function mapApiV2(api: ApiProductDetail, fallbackSlug: string): ProductDetail {
   const summaryHtml = rawDescription && looksLikeHtml(rawDescription) ? rawDescription : ''
   const descriptionText = summaryHtml ? '' : normalizeText(rawDescription)
   const shortDescription = normalizeText(api.short_description ?? '')
-  const description = descriptionText || shortDescription
+  const description = descriptionText || (summaryHtml ? stripHtml(rawDescription) : '')
+  const rawFullDescription = resolveFullDescription(api)
+  const fullDescriptionHtml = rawFullDescription && looksLikeHtml(rawFullDescription)
+    ? decodeHtmlEntities(rawFullDescription)
+    : ''
+  const fullDescription = fullDescriptionHtml ? '' : normalizeText(rawFullDescription)
 
   const faqItems = sortByOrder(api.faq_items ?? [])
     .map((item) => {
@@ -431,6 +590,12 @@ function mapApiV2(api: ApiProductDetail, fallbackSlug: string): ProductDetail {
     .filter((item) => item.question && item.answer)
 
   const videoGallery = heroVideo ? [heroVideo] : []
+  const videoItems = normalizeVideoItems(api.videos, title)
+  if (heroVideo && !videoItems.some((item) => item.url === heroVideo)) {
+    videoItems.unshift({ url: heroVideo, title })
+  }
+  const relatedProducts = normalizeRelatedProducts(api.related_products)
+  const specTable = normalizeSpecTable(api.spec_table ?? undefined)
 
   return {
     slug,
@@ -438,6 +603,8 @@ function mapApiV2(api: ApiProductDetail, fallbackSlug: string): ProductDetail {
     image: image || undefined,
     imageGallery: imageGallery.length ? imageGallery : undefined,
     description: description || undefined,
+    fullDescriptionHtml: fullDescriptionHtml || undefined,
+    fullDescription: fullDescription || undefined,
     summaryHtml: summaryHtml || undefined,
     category: category || undefined,
     categoryHref: categoryHref || undefined,
@@ -447,7 +614,10 @@ function mapApiV2(api: ApiProductDetail, fallbackSlug: string): ProductDetail {
     heroTagline: shortDescription || undefined,
     heroVideo: heroVideo || undefined,
     videoGallery: videoGallery.length ? videoGallery : undefined,
+    videoItems: videoItems.length ? videoItems : undefined,
     faqItems: faqItems.length ? faqItems : undefined,
+    relatedProducts: relatedProducts.length ? relatedProducts : undefined,
+    specTable,
     href: slug ? `/products/${encodeURIComponent(slug)}` : ''
   }
 }
@@ -457,6 +627,14 @@ function mapLegacyApi(api: ApiProductDetail, fallbackSlug: string): ProductDetai
   const moshakhasatBlocks = normalizeBlocks(api.moshakhasatBlocks)
   const videoBlocks = normalizeBlocks(api.videoBlocks)
   const videoGallery = (api.videoGallery ?? []).map((item) => coerceMediaUrl(item).url).filter(Boolean)
+  const videoItems = videoGallery.map((url) => ({ url, title: normalizeText(api.title ?? fallbackSlug) }))
+  const relatedProducts = normalizeRelatedProducts(api.related_products)
+  const specTable = normalizeSpecTable(api.spec_table ?? undefined)
+  const rawFullDescription = resolveFullDescription(api)
+  const fullDescriptionHtml = rawFullDescription && looksLikeHtml(rawFullDescription)
+    ? decodeHtmlEntities(rawFullDescription)
+    : ''
+  const fullDescription = fullDescriptionHtml ? '' : normalizeText(rawFullDescription)
 
   const image = coerceMediaUrl(api.image).url
   const heroImage = coerceMediaUrl(api.heroImage).url
@@ -473,6 +651,8 @@ function mapLegacyApi(api: ApiProductDetail, fallbackSlug: string): ProductDetai
     imageGallery: imageGallery.length ? imageGallery : undefined,
     price: api.price ? String(api.price) : undefined,
     description: api.description,
+    fullDescriptionHtml: fullDescriptionHtml || undefined,
+    fullDescription: fullDescription || undefined,
     highlight: api.highlight,
     highlightHtml: api.highlightHtml,
     summaryHtml: api.summaryHtml,
@@ -492,9 +672,12 @@ function mapLegacyApi(api: ApiProductDetail, fallbackSlug: string): ProductDetai
     moshakhasatBlocks: moshakhasatBlocks.length ? moshakhasatBlocks : undefined,
     videoBlocks: videoBlocks.length ? videoBlocks : undefined,
     specModels: api.specModels,
+    specTable,
     specDownloadHref: api.specDownloadHref,
     videoGallery: videoGallery.length ? videoGallery : undefined,
+    videoItems: videoItems.length ? videoItems : undefined,
     faqItems: api.faqItems,
+    relatedProducts: relatedProducts.length ? relatedProducts : undefined,
     href: api.href ?? ''
   }
 }
@@ -625,10 +808,25 @@ function mapApiToProduct(api: ApiProductDetail | null | undefined, fallbackSlug:
     })
     .filter((item) => item.question && item.answer)
 
+  const specTable = normalizeSpecTable(api?.spec_table ?? undefined)
+  const relatedProducts = normalizeRelatedProducts(api?.related_products)
+
   const title = normalizeText(api?.title ?? api?.hero_title ?? api?.meta_title ?? fallbackSlug)
   const slug = normalizeText(api?.slug ?? fallbackSlug)
   const highlight = normalizeText(api?.highlight ?? api?.highlights ?? '')
-  const description = normalizeText(api?.description ?? api?.short_description ?? '')
+  const rawDescription = typeof api?.description === 'string' ? api.description.trim() : ''
+  const rawSummaryHtml = typeof api?.summary_html === 'string' ? api.summary_html.trim() : ''
+  const summaryHtml = rawDescription && looksLikeHtml(rawDescription)
+    ? rawDescription
+    : rawSummaryHtml && looksLikeHtml(rawSummaryHtml)
+      ? rawSummaryHtml
+      : ''
+  const description = summaryHtml ? stripHtml(summaryHtml) : normalizeText(rawDescription || rawSummaryHtml)
+  const rawFullDescription = resolveFullDescription(api ?? {})
+  const fullDescriptionHtml = rawFullDescription && looksLikeHtml(rawFullDescription)
+    ? decodeHtmlEntities(rawFullDescription)
+    : ''
+  const fullDescription = fullDescriptionHtml ? '' : normalizeText(rawFullDescription)
   const price = api?.price !== undefined ? String(api.price) : ''
   const category = normalizeText(api?.category ?? '')
   const categoryHref = normalizeText(api?.categoryHref ?? '')
@@ -637,6 +835,10 @@ function mapApiToProduct(api: ApiProductDetail | null | undefined, fallbackSlug:
   const heroTagline = normalizeText(api?.hero_tagline ?? '')
   const heroEnglish = normalizeText(api?.hero_english ?? '')
   const heroVideo = coerceMediaUrl(api?.hero_video_url ?? api?.demo_video_url).url
+  const videoItems = normalizeVideoItems(api?.videos, heroTitle || title || slug)
+  if (heroVideo && !videoItems.some((item) => item.url === heroVideo)) {
+    videoItems.unshift({ url: heroVideo, title: heroTitle || title || slug })
+  }
 
   const specDownloadHref = normalizeText(api?.spec_download_href ?? api?.datasheet_url ?? '')
   const heroCatalogHref = normalizeText(api?.hero_catalog_href ?? api?.brochure_url ?? '')
@@ -658,9 +860,11 @@ function mapApiToProduct(api: ApiProductDetail | null | undefined, fallbackSlug:
     imageGallery: imageGalleryUnique.length ? imageGalleryUnique : undefined,
     price: price || undefined,
     description: description || undefined,
+    fullDescriptionHtml: fullDescriptionHtml || undefined,
+    fullDescription: fullDescription || undefined,
     highlight: highlight || undefined,
     highlightHtml: api?.highlight_html || undefined,
-    summaryHtml: api?.summary_html || undefined,
+    summaryHtml: summaryHtml || undefined,
     category: category || undefined,
     categoryHref: categoryHref || undefined,
     cartHref: normalizeText(api?.cart_href ?? '') || undefined,
@@ -677,9 +881,12 @@ function mapApiToProduct(api: ApiProductDetail | null | undefined, fallbackSlug:
     moshakhasatBlocks: moshakhasatBlocks.length ? moshakhasatBlocks : undefined,
     videoBlocks: videoBlocks.length ? videoBlocks : undefined,
     specModels: specModels.length ? specModels : undefined,
+    specTable,
     specDownloadHref: specDownloadHref || undefined,
     videoGallery: videoGallery.length ? videoGallery : undefined,
+    videoItems: videoItems.length ? videoItems : undefined,
     faqItems: faqItems.length ? faqItems : undefined,
+    relatedProducts: relatedProducts.length ? relatedProducts : undefined,
     href: ''
   }
 }
@@ -744,6 +951,14 @@ const breadcrumbCategoryHref = computed(() =>
 const breadcrumbCategoryIsInternal = computed(() => breadcrumbCategoryHref.value.startsWith('/categories'))
 
 const heroTitle = computed(() => data.value?.heroTitle || data.value?.title || data.value?.slug)
+const descriptionHtml = computed(() => data.value?.summaryHtml?.trim() || '')
+const fullDescriptionHtml = computed(() => data.value?.fullDescriptionHtml?.trim() || '')
+const fullDescriptionText = computed(() => data.value?.fullDescription || '')
+const relatedProducts = computed(() => data.value?.relatedProducts ?? [])
+const tableTextAlign = computed(() => (isRtl.value ? 'text-right' : 'text-left'))
+const phoneDisplay = computed(() => t('shared.phoneDisplay'))
+const callHref = computed(() => toTelLink(phoneDisplay.value))
+const contactHref = computed(() => localePath('/contact'))
 const productImages = computed(() => {
   const images = data.value?.imageGallery ?? []
   const merged = [data.value?.heroImage, data.value?.image, ...images].filter(Boolean) as string[]
@@ -751,6 +966,9 @@ const productImages = computed(() => {
 })
 const activeImageIndex = ref(0)
 const activeImage = computed(() => productImages.value[activeImageIndex.value] ?? productImages.value[0] ?? '')
+
+const relatedProductHref = (slugValue: string) =>
+  localePath(`/products/${encodeURIComponent(slugValue)}`)
 
 watch(productImages, (images) => {
   if (!images.length) {
@@ -769,6 +987,10 @@ const fallbackNav = computed<NavItem[]>(() => [
   { id: 'faq', label: t('productDetail.fallbackNav.faq') }
 ])
 
+const introHasContent = computed(() =>
+  Boolean(data.value?.moarefiBlocks?.length || fullDescriptionHtml.value || fullDescriptionText.value)
+)
+
 const navItems = computed(() => {
   const apiItems = data.value?.navItems?.length ? data.value.navItems : null
   const items = apiItems ?? fallbackNav.value
@@ -776,26 +998,48 @@ const navItems = computed(() => {
   if (apiItems) return filtered
 
   const available = new Set<string>()
-  if (data.value?.moarefiBlocks?.length) available.add('moarefi')
-  if (data.value?.moshakhasatBlocks?.length || data.value?.specModels?.length) available.add('moshakhasat')
-  if (data.value?.videoBlocks?.length || data.value?.videoGallery?.length || data.value?.heroVideo) available.add('video')
+  if (introHasContent.value) available.add('moarefi')
+  if (data.value?.moshakhasatBlocks?.length || data.value?.specModels?.length || data.value?.specTable?.rows?.length) {
+    available.add('moshakhasat')
+  }
+  if (
+    data.value?.videoBlocks?.length ||
+    data.value?.videoGallery?.length ||
+    data.value?.heroVideo ||
+    data.value?.videoItems?.length
+  ) {
+    available.add('video')
+  }
   if (data.value?.faqItems?.length) available.add('faq')
 
   return filtered.filter((item) => available.has(item.id))
 })
 
-const videoSources = computed(() => {
-  const sources = new Set<string>()
+const videoItems = computed<VideoItem[]>(() => {
+  const items: VideoItem[] = []
+  const seen = new Set<string>()
+  const fallbackTitle = heroTitle.value || ''
+  const addItem = (url: string, title?: string) => {
+    if (!url || seen.has(url)) return
+    seen.add(url)
+    items.push({ url, title: title || fallbackTitle })
+  }
+
+  for (const item of data.value?.videoItems ?? []) {
+    addItem(item.url, item.title)
+  }
   for (const block of data.value?.videoBlocks ?? []) {
-    if (block.type === 'video') sources.add(block.src)
+    if (block.type === 'video') addItem(block.src, fallbackTitle)
   }
   for (const src of data.value?.videoGallery ?? []) {
-    sources.add(src)
+    addItem(src, fallbackTitle)
   }
-  return Array.from(sources)
+  if (data.value?.heroVideo) addItem(data.value.heroVideo, fallbackTitle)
+
+  return items
 })
 
-const heroVideoSrc = computed(() => data.value?.heroVideo || videoSources.value[0] || '')
+const heroVideoSrc = computed(() => videoItems.value[0]?.url || data.value?.heroVideo || '')
 const videoPoster = computed(() => data.value?.heroImage || data.value?.image || '')
 
 const videoTextBlocks = computed(() =>
@@ -804,49 +1048,23 @@ const videoTextBlocks = computed(() =>
 
 const videoSlides = computed<VideoSlide[]>(() => {
   const slides: VideoSlide[] = []
-  const blocks = data.value?.videoBlocks ?? []
-  const gallery = data.value?.videoGallery ?? []
-  let galleryIndex = 0
   const fallbackPoster = videoPoster.value || undefined
 
-  for (const block of blocks) {
-    if (block.type === 'video') {
-      slides.push({
-        type: 'video',
-        src: block.src,
-        label: heroTitle.value,
-        poster: fallbackPoster
-      })
-      continue
-    }
-
-    if (block.type === 'image') {
-      const label = block.alt || heroTitle.value
-      if (gallery.length) {
-        const videoSrc = gallery[galleryIndex]
-        galleryIndex += 1
-        if (videoSrc) {
-          slides.push({
-            type: 'video',
-            src: videoSrc,
-            label,
-            poster: block.src
-          })
-        } else {
-          slides.push({ type: 'image', src: block.src, label })
-        }
-      } else {
-        slides.push({ type: 'image', src: block.src, label })
-      }
-    }
-  }
-
-  for (let i = galleryIndex; i < gallery.length; i += 1) {
+  for (const item of videoItems.value) {
     slides.push({
       type: 'video',
-      src: gallery[i]!,
-      label: heroTitle.value,
+      src: item.url,
+      label: item.title || heroTitle.value,
       poster: fallbackPoster
+    })
+  }
+
+  for (const block of data.value?.videoBlocks ?? []) {
+    if (block.type !== 'image') continue
+    slides.push({
+      type: 'image',
+      src: block.src,
+      label: block.alt || heroTitle.value
     })
   }
 
@@ -862,80 +1080,7 @@ const videoSlides = computed<VideoSlide[]>(() => {
   return slides
 })
 
-const videoScroller = ref<HTMLDivElement | null>(null)
-const videoSlideRefs = ref<HTMLElement[]>([])
-const videoActiveIndex = ref(0)
 const videoModalSrc = ref<string | null>(null)
-let videoRafId = 0
-
-onBeforeUpdate(() => {
-  videoSlideRefs.value = []
-})
-
-function setVideoSlideRef(el: Element | null) {
-  if (el instanceof HTMLElement) videoSlideRefs.value.push(el)
-}
-
-function clampVideoIndex(index: number) {
-  const max = Math.max(0, videoSlides.value.length - 1)
-  return Math.min(Math.max(index, 0), max)
-}
-
-function scrollVideoToIndex(index: number, behavior: ScrollBehavior = 'smooth') {
-  const container = videoScroller.value
-  const clamped = clampVideoIndex(index)
-  const el = videoSlideRefs.value[clamped]
-  if (!container || !el) return
-
-  videoActiveIndex.value = clamped
-
-  if ('scrollIntoView' in el) {
-    el.scrollIntoView({ behavior, block: 'nearest', inline: 'center' })
-    return
-  }
-
-  const containerRect = container.getBoundingClientRect()
-  const elRect = el.getBoundingClientRect()
-  const deltaX = (elRect.left + elRect.width / 2) - (containerRect.left + containerRect.width / 2)
-  if (Math.abs(deltaX) < 1) return
-
-  container.scrollBy({ left: deltaX, behavior })
-}
-
-function scrollVideoPrev() {
-  scrollVideoToIndex(videoActiveIndex.value - 1)
-}
-
-function scrollVideoNext() {
-  scrollVideoToIndex(videoActiveIndex.value + 1)
-}
-
-function updateVideoActive() {
-  const container = videoScroller.value
-  if (!container || !videoSlideRefs.value.length) return
-
-  const containerRect = container.getBoundingClientRect()
-  const center = containerRect.left + containerRect.width / 2
-
-  let bestIndex = 0
-  let bestDist = Number.POSITIVE_INFINITY
-  for (let i = 0; i < videoSlideRefs.value.length; i += 1) {
-    const rect = videoSlideRefs.value[i]!.getBoundingClientRect()
-    const slideCenter = rect.left + rect.width / 2
-    const dist = Math.abs(slideCenter - center)
-    if (dist < bestDist) {
-      bestDist = dist
-      bestIndex = i
-    }
-  }
-
-  videoActiveIndex.value = bestIndex
-}
-
-function onVideoScroll() {
-  if (videoRafId) cancelAnimationFrame(videoRafId)
-  videoRafId = requestAnimationFrame(updateVideoActive)
-}
 
 function openVideoModal(src: string) {
   videoModalSrc.value = src
@@ -944,27 +1089,6 @@ function openVideoModal(src: string) {
 function closeVideoModal() {
   videoModalSrc.value = null
 }
-
-watch(videoSlides, async (slides) => {
-  if (!import.meta.client) return
-  if (!slides.length) {
-    videoActiveIndex.value = 0
-    return
-  }
-  videoActiveIndex.value = clampVideoIndex(videoActiveIndex.value)
-  await nextTick()
-  scrollVideoToIndex(videoActiveIndex.value, 'auto')
-  updateVideoActive()
-}, { immediate: true })
-
-onMounted(() => {
-  window.addEventListener('resize', updateVideoActive, { passive: true })
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('resize', updateVideoActive)
-  if (videoRafId) cancelAnimationFrame(videoRafId)
-})
 
 const moarefiRenderBlocks = computed<RenderBlock[]>(() => {
   const blocks = data.value?.moarefiBlocks ?? []
@@ -1101,6 +1225,27 @@ useSeoMeta({
 
     <section class="relative bg-white">
       <div class="relative mx-auto max-w-[1220px] px-4 pb-12 pt-12">
+        <div class="flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+          <NuxtLink class="transition hover:text-amber-600" :to="localePath('/')">
+            {{ t('header.links.home') }}
+          </NuxtLink>
+          <span class="text-zinc-300">/</span>
+          <NuxtLink class="transition hover:text-amber-600" :to="localePath('/products')">
+            {{ t('header.links.products') }}
+          </NuxtLink>
+          <template v-if="breadcrumbCategoryLabel">
+            <span class="text-zinc-300">/</span>
+            <component
+              :is="breadcrumbCategoryIsInternal ? 'NuxtLink' : 'a'"
+              :to="breadcrumbCategoryIsInternal ? breadcrumbCategoryHref : undefined"
+              :href="breadcrumbCategoryIsInternal ? undefined : breadcrumbCategoryHref"
+              class="transition hover:text-amber-600"
+            >
+              {{ breadcrumbCategoryLabel }}
+            </component>
+          </template>
+        </div>
+
         <div class="mt-8 grid items-start gap-10 lg:grid-cols-12">
           <div class="order-2 flex justify-center lg:order-1 lg:col-span-6 lg:justify-start">
             <div v-if="productImages.length" class="w-full max-w-xl">
@@ -1144,11 +1289,11 @@ useSeoMeta({
               {{ heroTitle }}
             </h1>
 
-            <div
-              v-if="data?.summaryHtml"
-              class="mt-4 text-justify text-sm leading-8 text-zinc-900/80 [&_a]:font-semibold [&_a]:text-amber-600 [&_a]:hover:text-amber-700"
-              v-html="data.summaryHtml"
-            />
+            <div v-if="descriptionHtml" class="mt-4">
+              <div class="ql-container ql-snow" :dir="isRtl ? 'rtl' : 'ltr'">
+                <div class="ql-editor" v-html="descriptionHtml" />
+              </div>
+            </div>
             <p v-else-if="data?.description" class="mt-4 text-justify text-sm leading-8 text-zinc-900/80">
               {{ data.description }}
             </p>
@@ -1166,6 +1311,30 @@ useSeoMeta({
                 {{ data.highlight }}
               </p>
             </div>
+
+            <div class="mt-8 rounded-[28px] border border-amber-200 bg-amber-50 p-6 shadow-[0_20px_50px_rgba(248,144,20,0.15)]">
+              <p class="text-sm font-semibold text-zinc-900">
+                {{ t('productDetail.callToBuy.title') }}
+              </p>
+              <p class="mt-2 text-xs leading-6 text-zinc-600">
+                {{ t('productDetail.callToBuy.description') }}
+              </p>
+              <div class="mt-4 flex flex-wrap items-center gap-3">
+                <a
+                  v-if="callHref"
+                  :href="callHref"
+                  class="inline-flex items-center justify-center rounded-full bg-amber-500 px-5 py-2 text-xs font-semibold text-white shadow hover:bg-amber-600"
+                >
+                  {{ t('productDetail.callToBuy.primary') }} {{ phoneDisplay }}
+                </a>
+                <NuxtLink
+                  :to="contactHref"
+                  class="inline-flex items-center justify-center rounded-full border border-amber-500 px-5 py-2 text-xs font-semibold text-amber-700 transition hover:bg-amber-100"
+                >
+                  {{ t('productDetail.callToBuy.secondary') }}
+                </NuxtLink>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1179,7 +1348,7 @@ useSeoMeta({
       </div>
     </section>
 
-    <section v-if="data?.moarefiBlocks?.length" id="moarefi" class="scroll-mt-24 py-12">
+    <section v-if="introHasContent" id="moarefi" class="scroll-mt-24 py-12">
       <div class="mx-auto max-w-[1220px] px-4">
         <div class="flex items-center gap-4">
           <div class="h-[2px] flex-1 bg-amber-500"></div>
@@ -1252,11 +1421,24 @@ useSeoMeta({
               </div>
             </div>
           </template>
+          <div v-if="fullDescriptionHtml || fullDescriptionText" class="space-y-3">
+            <p class="text-sm font-semibold text-zinc-900">
+              {{ t('productDetail.fullDescription') }}
+            </p>
+            <div v-if="fullDescriptionHtml">
+              <div class="ql-container ql-snow" :dir="isRtl ? 'rtl' : 'ltr'">
+                <div class="ql-editor" v-html="fullDescriptionHtml" />
+              </div>
+            </div>
+            <p v-else class="text-sm leading-8 text-zinc-700">
+              {{ fullDescriptionText }}
+            </p>
+          </div>
         </div>
       </div>
     </section>
 
-    <section v-if="data?.moshakhasatBlocks?.length || data?.specModels?.length" id="moshakhasat" class="scroll-mt-24 py-12 bg-zinc-50/70">
+    <section v-if="data?.moshakhasatBlocks?.length || data?.specModels?.length || data?.specTable?.rows?.length" id="moshakhasat" class="scroll-mt-24 py-12 bg-zinc-50/70">
       <div class="mx-auto max-w-[1220px] px-4">
         <div class="flex items-center gap-4">
           <div class="h-[2px] flex-1 bg-amber-500"></div>
@@ -1264,6 +1446,52 @@ useSeoMeta({
             {{ sectionLabel('moshakhasat', t('productDetail.fallbackNav.specs')) }}
           </h2>
           <div class="h-[2px] flex-1 bg-amber-500"></div>
+        </div>
+
+        <div v-if="data?.specTable?.rows?.length" class="mt-8">
+          <h3 class="text-base font-bold text-zinc-900">
+            {{ t('productDetail.specTable.title') }}
+          </h3>
+          <div class="mt-4 overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
+            <div class="overflow-x-auto">
+              <table class="min-w-full text-xs">
+                <thead class="bg-zinc-900 text-white">
+                  <tr>
+                    <th class="px-4 py-3 font-semibold" :class="tableTextAlign">
+                      {{ t('productDetail.specTable.rowLabel') }}
+                    </th>
+                    <th
+                      v-for="column in data.specTable.columns"
+                      :key="column"
+                      class="px-4 py-3 font-semibold"
+                      :class="tableTextAlign"
+                    >
+                      {{ column }}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="row in data.specTable.rows"
+                    :key="row.label"
+                    class="border-t border-zinc-200/80"
+                  >
+                    <td class="whitespace-nowrap px-4 py-3 font-semibold text-zinc-900" :class="tableTextAlign">
+                      {{ row.label }}
+                    </td>
+                    <td
+                      v-for="column in data.specTable.columns"
+                      :key="`${row.label}-${column}`"
+                      class="px-4 py-3 text-zinc-600"
+                      :class="tableTextAlign"
+                    >
+                      {{ row.values[column] || '-' }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
 
         <div v-if="data?.moshakhasatBlocks?.length" class="mt-8 space-y-6">
@@ -1301,7 +1529,7 @@ useSeoMeta({
           </a>
         </div>
 
-        <div v-if="data?.specModels?.length" class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div v-if="data?.specModels?.length" class="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           <div
             v-for="model in data.specModels"
             :key="model.name"
@@ -1355,96 +1583,97 @@ useSeoMeta({
           </template>
         </div>
 
-        <div v-if="videoSlides.length" class="mt-10">
-          <div class="relative">
-            <button
-              type="button"
-              class="absolute left-2 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-zinc-800 shadow ring-1 ring-black/10 transition hover:bg-white sm:flex"
-              :class="videoActiveIndex === 0 ? 'cursor-not-allowed opacity-40' : ''"
-              :disabled="videoActiveIndex === 0"
-              :aria-label="t('productDetail.video.prev')"
-              @click="scrollVideoPrev"
-            >
-              <svg viewBox="0 0 20 20" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12.5 4.5L7 10l5.5 5.5" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              class="absolute right-2 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-zinc-800 shadow ring-1 ring-black/10 transition hover:bg-white sm:flex"
-              :class="videoActiveIndex >= videoSlides.length - 1 ? 'cursor-not-allowed opacity-40' : ''"
-              :disabled="videoActiveIndex >= videoSlides.length - 1"
-              :aria-label="t('productDetail.video.next')"
-              @click="scrollVideoNext"
-            >
-              <svg viewBox="0 0 20 20" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M7.5 4.5L13 10l-5.5 5.5" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-            </button>
-
-            <div
-              ref="videoScroller"
-              class="video-scroll flex gap-6 overflow-x-auto pb-8 pt-6 [-webkit-overflow-scrolling:touch] snap-x snap-mandatory"
-              :class="videoSlides.length <= 1 ? 'justify-center' : ''"
-              @scroll.passive="onVideoScroll"
-            >
-              <div
-                v-for="(slide, index) in videoSlides"
-                :key="`${slide.type}-${slide.src}-${index}`"
-                :ref="setVideoSlideRef"
-                class="group relative w-[88vw] shrink-0 snap-center overflow-hidden rounded-[34px] bg-black shadow-[0_14px_32px_rgba(0,0,0,0.22)] transition duration-300 sm:w-[560px] lg:w-[720px]"
-                :class="index === videoActiveIndex ? 'scale-100 opacity-100' : 'scale-[0.94] opacity-60'"
+        <div v-if="videoSlides.length" class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <button
+            v-for="slide in videoSlides"
+            :key="`${slide.type}-${slide.src}`"
+            type="button"
+            class="group overflow-hidden rounded-[26px] border border-zinc-200 bg-white shadow-[0_16px_36px_rgba(0,0,0,0.12)] transition hover:-translate-y-1"
+            @click="slide.type === 'video' ? openVideoModal(slide.src) : null"
+          >
+            <div class="relative aspect-[16/9] w-full bg-black">
+              <NuxtImg
+                v-if="slide.type === 'image'"
+                :src="slide.src"
+                :alt="slide.label || heroTitle"
+                class="h-full w-full object-cover"
+                sizes="(max-width: 768px) 100vw, 480px"
+              />
+              <video
+                v-else
+                class="h-full w-full object-cover"
+                playsinline
+                preload="metadata"
+                :poster="slide.poster || videoPoster"
               >
-                <div class="relative aspect-[16/9] w-full">
-                  <NuxtImg
-                    v-if="slide.type === 'image'"
-                    :src="slide.src"
-                    :alt="slide.label || heroTitle"
-                    class="h-full w-full object-cover"
-                    sizes="(max-width: 768px) 100vw, 900px"
-                  />
-                  <video
-                    v-else
-                    class="h-full w-full object-cover"
-                    playsinline
-                    preload="metadata"
-                    :poster="slide.poster || videoPoster"
-                  >
-                    <source :src="slide.src" type="video/mp4">
-                  </video>
-                  <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
-                  <div class="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
-                    <button
-                      v-if="slide.type === 'video'"
-                      type="button"
-                      class="inline-flex h-16 w-16 items-center justify-center rounded-full border-2 border-white/80 bg-white/10 backdrop-blur transition hover:bg-white/20"
-                      :aria-label="t('productDetail.video.play')"
-                      @click="openVideoModal(slide.src)"
-                    >
-                      <svg viewBox="0 0 24 24" class="h-7 w-7 text-white" fill="currentColor">
-                        <path d="M8 5.2v13.6c0 .7.8 1.1 1.4.7l10-6.8a.8.8 0 000-1.4l-10-6.8c-.6-.4-1.4 0-1.4.7z" />
-                      </svg>
-                    </button>
-                    <p class="mt-4 text-base font-semibold text-white drop-shadow sm:text-lg">
-                      {{ slide.label || heroTitle }}
-                    </p>
-                  </div>
-                </div>
+                <source :src="slide.src" type="video/mp4">
+              </video>
+              <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+              <div class="absolute inset-0 flex items-center justify-center">
+                <span
+                  v-if="slide.type === 'video'"
+                  class="inline-flex h-14 w-14 items-center justify-center rounded-full border-2 border-white/80 bg-white/10 text-white backdrop-blur transition group-hover:bg-white/20"
+                >
+                  <svg viewBox="0 0 24 24" class="h-7 w-7" fill="currentColor">
+                    <path d="M8 5.2v13.6c0 .7.8 1.1 1.4.7l10-6.8a.8.8 0 000-1.4l-10-6.8c-.6-.4-1.4 0-1.4.7z" />
+                  </svg>
+                </span>
               </div>
             </div>
-
-            <div class="mt-4 flex items-center justify-center gap-2">
-              <button
-                v-for="(slide, index) in videoSlides"
-                :key="`video-dot-${slide.src}-${index}`"
-                type="button"
-                class="h-2 w-8 rounded-full transition"
-                :class="index === videoActiveIndex ? 'bg-amber-500' : 'bg-zinc-300 hover:bg-zinc-400'"
-                :aria-label="t('productDetail.video.goTo', { index: index + 1 })"
-                @click="scrollVideoToIndex(index)"
-              />
+            <div class="px-4 py-4 text-right">
+              <p class="text-sm font-semibold text-zinc-900">
+                {{ slide.label || heroTitle }}
+              </p>
             </div>
-          </div>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section v-if="relatedProducts.length" class="py-12 bg-white">
+      <div class="mx-auto max-w-[1220px] px-4">
+        <div class="flex items-center gap-4">
+          <div class="h-[2px] flex-1 bg-amber-500"></div>
+          <h2 class="text-lg font-black text-amber-600">
+            {{ t('productDetail.related.title') }}
+          </h2>
+          <div class="h-[2px] flex-1 bg-amber-500"></div>
+        </div>
+
+        <div class="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          <article
+            v-for="item in relatedProducts"
+            :key="item.slug"
+            class="group flex h-full flex-col overflow-hidden rounded-[26px] bg-[linear-gradient(180deg,#7a7a7a_0%,#1f1f1f_100%)] p-4 shadow-[0_18px_40px_rgba(0,0,0,0.18)]"
+          >
+            <NuxtLink
+              :to="relatedProductHref(item.slug)"
+              class="flex aspect-square items-center justify-center overflow-hidden rounded-[20px] bg-white"
+            >
+              <NuxtImg
+                v-if="item.image"
+                :src="item.image"
+                :alt="item.title"
+                class="h-full w-full object-contain transition duration-500 group-hover:scale-[1.04]"
+                sizes="(max-width: 768px) 50vw, 240px"
+              />
+              <div v-else class="text-xs text-zinc-400">
+                {{ t('categories.list.noImage') }}
+              </div>
+            </NuxtLink>
+
+            <div class="mt-4 flex flex-1 flex-col items-center text-center text-white">
+              <NuxtLink
+                :to="relatedProductHref(item.slug)"
+                class="text-sm font-semibold leading-7 text-white/90 hover:text-white"
+              >
+                {{ item.title }}
+              </NuxtLink>
+              <p v-if="item.category" class="mt-2 text-xs text-white/70">
+                {{ item.category }}
+              </p>
+            </div>
+          </article>
         </div>
       </div>
     </section>
@@ -1501,11 +1730,97 @@ useSeoMeta({
 </template>
 
 <style scoped>
-.video-scroll {
-  scrollbar-width: none;
+:deep(.ql-container) {
+  border: 0;
+  font-family: inherit;
+  background: transparent;
 }
 
-.video-scroll::-webkit-scrollbar {
-  display: none;
+:deep(.ql-editor) {
+  padding: 0;
+  font-size: 0.875rem;
+  line-height: 2;
+  color: rgba(24, 24, 27, 0.8);
+  text-align: justify;
+  direction: inherit;
+}
+
+:deep(.ql-editor > *:first-child) {
+  margin-top: 0;
+}
+
+:deep(.ql-editor p) {
+  margin-top: 0.75rem;
+}
+
+:deep(.ql-editor h2) {
+  margin-top: 1.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #18181b;
+}
+
+:deep(.ql-editor h3) {
+  margin-top: 1.25rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #27272a;
+}
+
+:deep(.ql-editor a) {
+  color: #d97706;
+  font-weight: 600;
+}
+
+:deep(.ql-editor ul),
+:deep(.ql-editor ol) {
+  margin-top: 0.75rem;
+  padding-right: 1.25rem;
+}
+
+:deep(.ql-editor ul) {
+  list-style: disc;
+}
+
+:deep(.ql-editor ol) {
+  list-style: decimal;
+}
+
+:deep(.ql-editor li) {
+  margin-top: 0.35rem;
+}
+
+:deep(.ql-editor blockquote) {
+  margin-top: 1rem;
+  border-right: 3px solid #f59e0b;
+  padding-right: 0.75rem;
+  color: #52525b;
+}
+
+:deep(.ql-editor img) {
+  margin: 1.25rem auto;
+  width: 100%;
+  border-radius: 1rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+:deep(.ql-editor .ql-align-center) {
+  text-align: center;
+}
+
+:deep(.ql-editor .ql-align-right) {
+  text-align: right;
+}
+
+:deep(.ql-editor .ql-align-left) {
+  text-align: left;
+}
+
+:deep(.ql-editor .ql-align-justify) {
+  text-align: justify;
+}
+
+:deep(.ql-editor .ql-direction-rtl) {
+  direction: rtl;
 }
 </style>

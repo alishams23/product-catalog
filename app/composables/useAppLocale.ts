@@ -2,7 +2,7 @@ import { isLocale, type Locale } from '~/i18n/messages'
 
 const localeRegex = /^\/(en|fa)(?=\/|$|\?|#)/
 
-export function useLocale() {
+export function useAppLocale() {
   const route = useRoute()
   const locale = computed<Locale>(() => {
     const match = localeRegex.exec(route.path)
